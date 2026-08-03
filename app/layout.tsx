@@ -1,25 +1,25 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
+import './globals.css';
+import { ThemeProvider } from '@/components/theme-provider';
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
   title: {
-    default: "Agni SDK — Build Production-Ready AI Agents",
-    template: "%s | Agni SDK",
+    default: 'Agni SDK — Build Production-Ready AI Agents',
+    template: '%s | Agni SDK',
   },
   description:
-    "A TypeScript-first runtime for building reliable AI agents with tools, providers, memory, and observability.",
+    'A TypeScript-first runtime for building reliable AI agents with tools, providers, memory, and observability.',
 };
 
 export default function RootLayout({
@@ -34,9 +34,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-screen antialiased">
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );
