@@ -4,7 +4,7 @@ import { useTheme } from 'next-themes';
 import { Moon, Sun } from 'lucide-react';
 
 export function ThemeToggle() {
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
 
   const isDark = resolvedTheme === 'dark';
 
@@ -14,13 +14,13 @@ export function ThemeToggle() {
       aria-label="Toggle theme"
       className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-zinc-400 transition hover:border-white/20 hover:text-white"
     >
-      {theme === undefined ? (
-        <div className="h-4 w-4" />
-      ) : isDark ? (
-        <Sun size={17} />
-      ) : (
-        <Moon size={17} />
-      )}
+      {resolvedTheme ? (
+        isDark ? (
+          <Sun size={17} />
+        ) : (
+          <Moon size={17} />
+        )
+      ) : null}
     </button>
   );
 }

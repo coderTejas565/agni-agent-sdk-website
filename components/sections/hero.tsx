@@ -90,7 +90,7 @@ export function Hero() {
         animate="show"
         className="mx-auto max-w-7xl px-6"
       >
-        <div className="mx-auto max-w-4xl text-center">
+        <div className="mx-auto max-w-5xl text-center">
           <motion.div
             variants={item}
             className="text-foreground bg-muted/30 border-border mx-auto mb-8 flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm"
