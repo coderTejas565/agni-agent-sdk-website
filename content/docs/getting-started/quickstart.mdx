@@ -1,0 +1,77 @@
+---
+title: Page Title
+description: Short description.
+---
+---
+
+## `getting-started/quickstart.mdx`
+
+```mdx
+---
+title: Quickstart
+description: Create your first AI agent using Agni SDK.
+---
+
+# Quickstart
+
+Create an agent:
+
+```ts
+import {
+  Agent,
+  Runner,
+  GeminiProvider
+} from "agnia-agent-sdk";
+
+
+const provider = new GeminiProvider({
+  apiKey: process.env.GEMINI_API_KEY,
+});
+
+
+const agent = new Agent({
+  name: "assistant",
+  provider,
+});
+
+
+const runner = new Runner();
+
+
+const result = await runner.run(
+  agent,
+  "Hello Agni",
+  {
+    context: {},
+  }
+);
+
+
+console.log(result.output);
+
+
+---
+
+## Step 2: For folders, create navigation order
+
+Fumadocs reads file order from `meta.json`.
+
+Create:
+
+```bash
+content/docs/meta.json
+
+
+Example:
+
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "getting-started",
+    "concepts",
+    "guides",
+    "examples",
+    "api-reference"
+  ]
+}
