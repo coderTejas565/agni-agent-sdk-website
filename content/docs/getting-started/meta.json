@@ -1,9 +1,4 @@
 {
   "title": "Getting Started",
-  "pages": [
-    "introduction",
-    "installation",
-    "quickstart",
-    "first-agent"
-  ]
+  "pages": ["introduction", "installation", "quickstart", "first-agent"]
 }

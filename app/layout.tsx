@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: ReactNode ;
+  children: ReactNode;
 }>) {
   return (
     <html
@@ -36,10 +36,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-screen antialiased">
-  <ThemeProvider>
-    <RootProvider>{children}</RootProvider>
-  </ThemeProvider>
-</body>
+        <ThemeProvider>
+          <RootProvider>{children}</RootProvider>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

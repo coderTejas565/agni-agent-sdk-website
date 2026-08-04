@@ -14,13 +14,7 @@ export function ThemeToggle() {
       aria-label="Toggle theme"
       className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-zinc-400 transition hover:border-white/20 hover:text-white"
     >
-      {resolvedTheme ? (
-        isDark ? (
-          <Sun size={17} />
-        ) : (
-          <Moon size={17} />
-        )
-      ) : null}
+      {resolvedTheme ? isDark ? <Sun size={17} /> : <Moon size={17} /> : null}
     </button>
   );
 }
