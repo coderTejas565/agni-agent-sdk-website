@@ -1,10 +1,10 @@
 import { source } from '@/lib/source';
 import {
-  DocsBody,
-  DocsDescription,
   DocsPage,
+  DocsBody,
   DocsTitle,
-} from 'fumadocs-ui/layouts/docs/page';
+  DocsDescription,
+} from "fumadocs-ui/layouts/glass/page";
 import { notFound } from 'next/navigation';
 import { getMDXComponents } from '@/components/mdx';
 import type { Metadata } from 'next';

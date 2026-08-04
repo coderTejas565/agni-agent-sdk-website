@@ -1,11 +1,45 @@
-import { source } from '@/lib/source';
-import { DocsLayout } from 'fumadocs-ui/layouts/docs';
-import { baseOptions } from '@/lib/layout.shared';
+import { GlassLayout } from "fumadocs-ui/layouts/glass";
 
-export default function Layout({ children }: LayoutProps<'/docs'>) {
+import { source } from "@/lib/source";
+
+import { baseOptions } from "@/lib/layout.shared";
+
+import type { ReactNode } from "react";
+
+
+export const metadata = {
+
+  title:
+    "Documentation | Agni SDK",
+
+  description:
+    "Build reliable AI agents with Agni SDK.",
+
+};
+
+
+
+export default function Layout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+
+
   return (
-    <DocsLayout tree={source.getPageTree()} {...baseOptions()}>
+
+    <GlassLayout
+
+      {...baseOptions()}
+
+      tree={source.getPageTree()}
+
+    >
+
       {children}
-    </DocsLayout>
+
+    </GlassLayout>
+
   );
+
 }
