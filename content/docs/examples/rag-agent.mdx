@@ -1,4 +1,209 @@
 ---
-title: Page Title
-description: Short description.
+title: RAG Agent
+description: Build an AI agent that answers questions using your own knowledge base.
 ---
+
+# RAG Agent
+
+Retrieval-Augmented Generation (RAG) allows an agent to answer questions using your own documents instead of relying only on the language model's training data.
+
+In a typical RAG workflow, the model does **not** search your documents directly.
+
+Instead, it asks a retrieval tool for relevant context, and then generates an answer using that retrieved information.
+
+---
+
+## What You'll Build
+
+A RAG agent that:
+
+- Retrieves relevant document chunks
+- Uses those chunks as context
+- Generates grounded answers
+- Avoids hallucinations
+
+---
+
+## High-Level Architecture
+
+```text
+User Question
+      │
+      ▼
+Runner
+      │
+      ▼
+Provider
+      │
+      ▼
+retrieve_documents()
+      │
+      ▼
+Vector Database
+      │
+      ▼
+Relevant Chunks
+      │
+      ▼
+Provider
+      │
+      ▼
+Final Answer
+```
+
+---
+
+## Project Structure
+
+```text
+rag-agent/
+├── index.ts
+├── tools/
+│   └── retrieve.ts
+├── lib/
+│   └── vector-store.ts
+└── package.json
+```
+
+---
+
+## Retrieval Tool
+
+The retrieval tool is responsible for searching your knowledge base.
+
+```ts
+const retrieveTool = {
+  name: "retrieve_documents",
+
+  description:
+    "Searches the knowledge base for relevant information.",
+
+  parameters: {
+    type: "object",
+
+    properties: {
+      query: {
+        type: "string",
+      },
+    },
+
+    required: ["query"],
+  },
+
+  async execute({ query }) {
+    return await searchKnowledgeBase(query);
+  },
+};
+```
+
+The implementation of `searchKnowledgeBase()` depends on your storage layer.
+
+It might query:
+
+- Pinecone
+- Qdrant
+- PostgreSQL + pgvector
+- Weaviate
+- Chroma
+- Any custom vector database
+
+---
+
+## Create the Agent
+
+```ts
+const agent = new Agent({
+  name: "rag-agent",
+
+  instructions:
+    "Answer questions only using the retrieved context.",
+
+  provider,
+
+  tools: [retrieveTool],
+});
+```
+
+Whenever additional knowledge is required, the model can call `retrieve_documents()`.
+
+---
+
+## Runtime Flow
+
+```text
+Question:
+"How does Agni Runner work?"
+
+          │
+          ▼
+
+Provider requests:
+
+retrieve_documents()
+
+          │
+          ▼
+
+Vector Search
+
+          │
+          ▼
+
+Relevant Chunks Returned
+
+          │
+          ▼
+
+LLM Generates Answer
+
+          │
+          ▼
+
+RunResult
+```
+
+Unlike a normal chat agent, the model receives external knowledge before generating the final response.
+
+---
+
+## Why RAG?
+
+Without retrieval, an LLM can only answer using its training data.
+
+RAG enables agents to work with:
+
+- Internal documentation
+- Product manuals
+- Company knowledge bases
+- PDFs
+- Notion pages
+- Wikis
+- Support documentation
+
+This makes answers more accurate, up-to-date, and grounded in your own data.
+
+---
+
+## Production Considerations
+
+A production RAG system usually includes:
+
+- Document ingestion
+- Chunking
+- Embedding generation
+- Vector indexing
+- Similarity search
+- Prompt construction
+- Citation support
+
+Agni focuses on orchestrating the runtime. You can integrate any retrieval pipeline that fits your application.
+
+---
+
+## Next Steps
+
+After understanding RAG, continue with:
+
+- **Research Agent** — orchestrate multiple tools in a single workflow.
+- **Custom Tools Guide** — build your own retrieval tools.
+- **Architecture → Runtime** — learn how Agni executes tool calls internally.

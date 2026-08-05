@@ -1,4 +1,157 @@
 ---
-title: Page Title
-description: Short description.
+title: Chat Agent
+description: Build a conversational AI assistant using Agni Agent SDK.
 ---
+
+# Chat Agent
+
+This example demonstrates the simplest conversational agent you can build with Agni.
+
+The agent:
+
+- Receives a user message
+- Sends it to an LLM
+- Returns a response
+- Uses no tools or memory
+
+It is the ideal starting point for understanding the Agni runtime.
+
+---
+
+## Project Structure
+
+```text
+chat-agent/
+├── index.ts
+├── .env
+└── package.json
+```
+
+---
+
+## Install
+
+```bash
+pnpm add agni-sdk
+```
+
+---
+
+## Environment Variables
+
+```text
+GEMINI_API_KEY=your_api_key
+```
+
+---
+
+## Create the Agent
+
+```ts
+import "dotenv/config";
+
+import {
+  Agent,
+  Runner,
+  GeminiProvider,
+} from "agni-sdk";
+
+const provider = new GeminiProvider({
+  apiKey: process.env.GEMINI_API_KEY!,
+});
+
+const agent = new Agent({
+  name: "chat-agent",
+
+  instructions:
+    "You are a friendly and helpful AI assistant.",
+
+  provider,
+});
+
+const runner = new Runner();
+
+const result = await runner.run(
+  agent,
+
+  "Explain how JavaScript promises work.",
+
+  {
+    context: {},
+  }
+);
+
+if (result.success) {
+  console.log(result.output);
+}
+```
+
+---
+
+## Example Output
+
+```text
+Promises are JavaScript objects that represent the eventual
+completion or failure of an asynchronous operation.
+
+A promise can be in one of three states:
+
+• Pending
+• Fulfilled
+• Rejected
+
+Using promises helps write asynchronous code that is easier
+to read than deeply nested callbacks...
+```
+
+---
+
+## What Happens Internally?
+
+```text
+User Message
+      │
+      ▼
+Agent
+      │
+      ▼
+Runner
+      │
+      ▼
+Gemini Provider
+      │
+      ▼
+Language Model
+      │
+      ▼
+Text Response
+      │
+      ▼
+RunResult
+```
+
+The Runner creates a new execution context, sends the conversation to the provider, waits for the model response, and returns a normalized `RunResult`.
+
+Since no tools are registered, the runtime completes after a single provider call.
+
+---
+
+## What You'll Learn
+
+After completing this example you'll understand:
+
+- Creating an `Agent`
+- Configuring a model provider
+- Running an agent
+- Receiving a `RunResult`
+- The basic Agni execution flow
+
+---
+
+## Next Steps
+
+After building a simple chat agent, continue with:
+
+- **Weather Agent** — learn tool calling
+- **RAG Agent** — retrieve external knowledge
+- **Research Agent** — orchestrate multiple tools

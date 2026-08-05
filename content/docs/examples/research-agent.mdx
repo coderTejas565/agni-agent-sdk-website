@@ -1,4 +1,195 @@
 ---
-title: Page Title
-description: Short description.
+title: Research Agent
+description: Build an AI research assistant that combines multiple tools to gather and synthesize information.
 ---
+
+# Research Agent
+
+Real-world AI assistants rarely rely on a single tool.
+
+A research assistant typically needs to gather information from multiple sources before producing a final answer.
+
+This example demonstrates how Agni coordinates multiple tools during a single agent execution.
+
+---
+
+## What You'll Build
+
+A research agent capable of:
+
+- Searching the web
+- Looking up documentation
+- Reading local knowledge
+- Combining information into a single answer
+
+Rather than hardcoding the workflow, the language model decides which tools to use and in what order.
+
+---
+
+## High-Level Architecture
+
+```text
+             User Question
+                   │
+                   ▼
+              Research Agent
+                   │
+                   ▼
+                 Runner
+                   │
+        ┌──────────┼──────────┐
+        ▼          ▼          ▼
+   Web Search   Documentation  Database
+        │          │          │
+        └──────────┼──────────┘
+                   ▼
+          Combined Context
+                   │
+                   ▼
+             Gemini Provider
+                   │
+                   ▼
+             Final Response
+```
+
+---
+
+## Project Structure
+
+```text
+research-agent/
+├── index.ts
+├── tools/
+│   ├── web-search.ts
+│   ├── documentation.ts
+│   └── database.ts
+└── package.json
+```
+
+---
+
+## Register Multiple Tools
+
+```ts
+const agent = new Agent({
+  name: "research-agent",
+
+  instructions:
+    "Research the user's question using the available tools before answering.",
+
+  provider,
+
+  tools: [
+    webSearchTool,
+    documentationTool,
+    databaseTool,
+  ],
+});
+```
+
+Agni automatically exposes all registered tools to the provider.
+
+---
+
+## Example Conversation
+
+**User**
+
+```text
+Compare PostgreSQL and MongoDB for an analytics platform.
+```
+
+The provider may decide to:
+
+1. Search recent information.
+2. Read internal documentation.
+3. Retrieve benchmark data.
+4. Generate a final comparison.
+
+This orchestration happens automatically through the Runner.
+
+---
+
+## Runtime Execution
+
+```text
+User Question
+      │
+      ▼
+Runner
+      │
+      ▼
+Provider
+      │
+      ▼
+Web Search Tool
+      │
+      ▼
+Documentation Tool
+      │
+      ▼
+Database Tool
+      │
+      ▼
+Provider
+      │
+      ▼
+Final Answer
+```
+
+Notice that the provider can request multiple tool calls before producing the final response.
+
+---
+
+## Why Multiple Tools?
+
+Different tools solve different problems.
+
+For example:
+
+| Tool | Responsibility |
+|------|----------------|
+| Web Search | Recent information |
+| Documentation | Product knowledge |
+| Database | Structured business data |
+| Weather | Live weather information |
+| Email | Send notifications |
+
+Instead of creating one large tool, divide responsibilities into smaller, focused tools.
+
+---
+
+## Best Practices
+
+- Keep each tool focused on one task.
+- Return structured data instead of formatted text.
+- Write clear tool descriptions.
+- Register only the tools required by the agent.
+- Let the model decide when a tool should be used.
+
+Small, composable tools produce more reliable agent behavior than one complex tool.
+
+---
+
+## Where This Pattern Is Used
+
+Research-style agents are commonly used for:
+
+- Technical research assistants
+- Documentation assistants
+- Enterprise search
+- Internal knowledge systems
+- Financial research
+- Customer support assistants
+
+The same orchestration pattern can be adapted to many real-world applications.
+
+---
+
+## Next Steps
+
+Continue exploring:
+
+- **Custom Tools** — build your own tools.
+- **RAG Agent** — integrate a vector database.
+- **Architecture → Runtime** — understand how Agni executes multiple tool calls internally.

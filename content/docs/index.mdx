@@ -5,25 +5,13 @@ description: Build reliable AI agents with a TypeScript-first runtime.
 
 # Build reliable AI agents with control
 
-Agni Agent SDK is a TypeScript-first runtime for building production-ready AI agents.
+Agni Agent SDK is a **TypeScript-first runtime** for building production-ready AI agents that are predictable, observable, and easy to debug.
 
-It gives developers explicit control over:
-
-- Agent execution
-- Tool calling
-- Model providers
-- Runtime events
-- Memory
-- Guardrails
-- Observability
-
-Agni is designed around one principle:
-
-> Agents should be predictable, transparent, and easy to debug.
+Unlike traditional agent frameworks that hide execution behind abstractions, Agni gives you explicit control over every step of an agent run—from provider requests to tool execution and runtime events.
 
 ---
 
-## Installation
+## Install Agni
 
 Install Agni using your preferred package manager.
 
@@ -41,35 +29,44 @@ yarn add agni-agent-sdk
 
 ---
 
-## Create your first agent
+# Your First Agent
 
-An Agni application is built around three primitives:
+Every Agni application is built around three core primitives.
 
-### Agent
+## Agent
 
 Defines your agent's identity, instructions, and capabilities.
 
-### Provider
+↓
+
+## Provider
 
 Connects Agni to an AI model.
 
-### Runner
+↓
 
-Controls the complete agent execution lifecycle.
+## Runner
+
+Executes the complete runtime lifecycle.
 
 ```ts
-import 'dotenv/config';
+import "dotenv/config";
 
-import { Agent, Runner, GeminiProvider } from 'agni-agent-sdk';
+import {
+  Agent,
+  Runner,
+  GeminiProvider,
+} from "agni-agent-sdk";
 
 const provider = new GeminiProvider({
   apiKey: process.env.GEMINI_API_KEY!,
 });
 
 const agent = new Agent({
-  name: 'assistant',
+  name: "assistant",
 
-  instructions: 'You are a helpful AI assistant.',
+  instructions:
+    "You are a helpful AI assistant.",
 
   provider,
 });
@@ -78,12 +75,10 @@ const runner = new Runner();
 
 const result = await runner.run(
   agent,
-
-  'Explain how AI agents work.',
-
+  "Explain how AI agents work.",
   {
     context: {},
-  },
+  }
 );
 
 if (result.success) {
@@ -93,119 +88,137 @@ if (result.success) {
 
 ---
 
-## How Agni works
+# What Happens During a Run?
 
-Agni separates the agent system into clear layers.
+Every call to `runner.run()` follows the same execution lifecycle.
 
-```
-User Input
-
-     |
-
-     v
-
-   Agent
-
-     |
-
-     v
-
-  Runner
-
-     |
-
- +-----------+
-
- |           |
-
-Provider   Tools
-
- |           |
-
- +-----------+
-
-     |
-
-     v
-
- Final Result
+```text
+1. Create RunContext
+        │
+        ▼
+2. Send messages to Provider
+        │
+        ▼
+3. Provider decides whether tools are needed
+        │
+        ▼
+4. Execute requested tools
+        │
+        ▼
+5. Provider generates the final response
+        │
+        ▼
+6. Return a normalized RunResult
 ```
 
-The runtime manages execution.
-
-Providers handle model communication.
-
-Tools extend agent capabilities.
-
-This separation keeps your application logic independent from AI providers.
+This predictable runtime is the foundation of Agni.
 
 ---
 
-## Explore Agni
+# Runtime Architecture
 
-Choose your learning path.
+Agni separates agent execution into independent layers.
 
-### Getting Started
+```text
+             User Input
+                  │
+                  ▼
+               Runner
+        ┌─────────┼─────────┐
+        ▼         ▼         ▼
+     Agent    Provider    Tools
+        └─────────┼─────────┘
+                  ▼
+             Final Result
+```
 
-Build your first working agent and understand the core workflow.
+Each layer has a single responsibility.
 
-[Start building →](/docs/getting-started/introduction)
+- **Runner** orchestrates execution.
+- **Agent** defines behavior.
+- **Provider** communicates with the language model.
+- **Tools** extend what the agent can do.
 
----
-
-### Architecture
-
-Understand how Agni's runtime, providers, tools, memory, and execution flow work internally.
-
-[Explore architecture →](/docs/architecture/overview)
-
----
-
-### Examples
-
-Explore complete runnable agent implementations.
-
-[View examples →](/docs/examples/weather-agent)
-
----
-
-## Developer Resources
-
-### Concepts
-
-Understand the foundations behind agents, tools, memory, and execution.
-
-[Learn concepts →](/docs/concepts)
+This architecture keeps your application independent from model providers while making every execution step observable.
 
 ---
 
-### Guides
+# Continue Learning
 
-Learn how to build production-ready agent systems.
-
-[Read guides →](/docs/guides)
+Choose the path that matches where you are.
 
 ---
 
-### API Reference
+## Getting Started
 
-Explore every public Agni SDK API.
+Build your first working agent in just a few minutes.
 
-[Browse API reference →](/docs/api-reference)
+[Start Building →](/docs/getting-started/introduction)
 
 ---
 
-## Why Agni?
+## Architecture
 
-Most agent frameworks hide the execution loop.
+Understand how the runtime, providers, tools, memory, and execution flow work internally.
 
-Agni keeps the runtime visible.
+[Explore Architecture →](/docs/architecture/overview)
 
-You can understand:
+---
+
+## Examples
+
+Explore complete runnable applications built with Agni.
+
+[View Examples →](/docs/examples/weather-agent)
+
+---
+
+## Guides
+
+Learn production-ready patterns, custom tools, providers, retries, and deployment strategies.
+
+[Read Guides →](/docs/guides/custom-tools)
+
+---
+
+## API Reference
+
+Browse every public API exposed by the SDK.
+
+[Browse API Reference →](/docs/api-reference)
+
+---
+
+# Why Agni?
+
+Most agent frameworks abstract away the runtime.
+
+Agni makes execution explicit.
+
+You always know:
 
 - when an agent starts
 - when a provider is called
 - when tools execute
-- how results are produced
+- when a new runtime turn begins
+- how the final response is produced
 
-Because reliable AI systems require visibility.
+Because reliable AI systems require visibility, not hidden abstractions.
+
+---
+
+# Designed for Production
+
+Agni is built around a small set of composable primitives.
+
+- TypeScript-first APIs
+- Provider-agnostic architecture
+- Tool-first execution model
+- Event-driven runtime
+- Observable execution lifecycle
+- Predictable agent behavior
+
+Whether you're building a simple assistant or a production-grade multi-agent system, Agni provides the runtime not the magic.
+
+
+

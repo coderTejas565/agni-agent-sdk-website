@@ -1,4 +1,206 @@
 ---
-title: Page Title
-description: Short description.
+title: Weather Agent
+description: Build a weather assistant that uses tools to answer real-world questions.
 ---
+
+# Weather Agent
+
+This example demonstrates one of the most important concepts in Agni SDK:
+
+**Tool calling.**
+
+Instead of asking the language model to hallucinate the weather, the agent calls a tool that fetches structured data and then uses that data to generate the final response.
+
+You'll learn how to:
+
+- Register a tool
+- Give the model access to that tool
+- Execute the agent with `Runner`
+- Receive a final natural-language response
+
+---
+
+## Project Structure
+
+```text
+weather-agent/
+├── index.ts
+└── weather-agent.tool.ts
+```
+
+---
+
+## Step 1 — Create a Tool
+
+A tool is simply an object that exposes metadata and an `execute()` function.
+
+```ts title="weather-agent.tool.ts"
+import type { Tool } from "agni-agent-sdk";
+
+export const weatherTool: Tool = {
+  name: "get_weather",
+
+  description: "Returns the weather for a city.",
+
+  parameters: {
+    type: "object",
+
+    properties: {
+      city: {
+        type: "string",
+        description: "City name",
+      },
+    },
+
+    required: ["city"],
+  },
+
+  async execute({ city }) {
+    console.log(`🛠 Weather tool called: ${city}`);
+
+    return {
+      city,
+      temperature: 29,
+      condition: "Sunny",
+    };
+  },
+};
+```
+
+The model never executes code itself.
+
+Instead, it decides **when** to call a tool, and Agni executes it on the model's behalf.
+
+---
+
+## Step 2 — Create the Agent
+
+Register the tool when creating your agent.
+
+```ts title="index.ts"
+import "dotenv/config";
+
+import {
+  Agent,
+  Runner,
+  GeminiProvider,
+} from "agni-agent-sdk";
+
+import { weatherTool } from "./weather-agent.tool";
+
+const provider = new GeminiProvider({
+  apiKey: process.env.GEMINI_API_KEY!,
+});
+
+const agent = new Agent({
+  name: "weather-agent",
+
+  instructions:
+    "You are a helpful weather assistant. Always use the weather tool whenever a user asks about the weather.",
+
+  provider,
+
+  tools: [weatherTool],
+});
+
+const runner = new Runner();
+
+const result = await runner.run(
+  agent,
+  "What is the weather in Pune today?",
+  {
+    context: {},
+  }
+);
+
+console.log(result);
+```
+
+---
+
+## What Happens Internally?
+
+When `runner.run()` is called, Agni performs the following steps:
+
+1. Creates a new execution context.
+2. Sends the conversation and available tools to the provider.
+3. The model decides to call `get_weather`.
+4. Agni executes the tool.
+5. The tool result is added back into the conversation.
+6. The model generates the final answer.
+7. The runner returns a normalized `RunResult`.
+
+```text
+User
+ │
+ ▼
+Runner
+ │
+ ▼
+Provider
+ │
+ ▼
+Tool Call
+ │
+ ▼
+weatherTool.execute()
+ │
+ ▼
+Tool Result
+ │
+ ▼
+Provider
+ │
+ ▼
+Final Response
+```
+
+---
+
+## Example Output
+
+Running the example produces output similar to:
+
+```text
+🛠 Weather tool called: Pune
+
+{
+  success: true,
+  output: "The weather in Pune today is Sunny with a temperature of 29 degrees Celsius.",
+  metadata: {
+    runId: "5af0fcff-0ff2-4540-b7c3-c285ca665229",
+    turns: 2
+  }
+}
+```
+
+Notice that the execution required **two turns**:
+
+- **Turn 1:** The model requested the weather tool.
+- **Turn 2:** The model generated the final response using the tool output.
+
+---
+
+## Why Use Tools?
+
+Without tools, an LLM can only generate text from its training data.
+
+With tools, an agent can:
+
+- Access live information
+- Query databases
+- Call APIs
+- Execute business logic
+- Interact with external systems
+
+Agni makes tool execution explicit, predictable, and observable.
+
+---
+
+## Next Steps
+
+After understanding tool calling, continue with:
+
+- **Chat Agent** — build a conversational assistant.
+- **RAG Agent** — answer questions using your own documents.
+- **Research Agent** — combine multiple tools to perform complex workflows.
