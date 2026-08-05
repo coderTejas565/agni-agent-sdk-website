@@ -1,4 +1,486 @@
 ---
-title: Page Title
-description: Short description.
+title: Memory
+description: Store and retrieve conversation state across agent executions.
 ---
+
+# Memory
+
+Memory allows Agni agents to maintain state across multiple executions.
+
+Without memory, every agent execution starts from a fresh context.
+
+With memory, agents can:
+
+- Remember previous conversations
+- Maintain user sessions
+- Store application state
+- Build long-running workflows
+
+Agni treats memory as a separate runtime capability instead of coupling it directly to the model provider.
+
+---
+
+## Import
+
+```ts
+import type {
+  Memory
+} from "agni-sdk";
+```
+
+---
+
+# Memory architecture
+
+Agni separates memory storage from agent execution.
+
+```text
+User
+
+ |
+
+ v
+
+Agent
+
+ |
+
+ v
+
+Runner
+
+ |
+
+ v
+
+Memory Interface
+
+ |
+
+ +----------------+
+
+ |                |
+
+In Memory      Redis
+
+SQLite         Custom DB
+
+```
+
+The runtime only depends on the memory interface.
+
+The storage implementation can change without changing your agent.
+
+---
+
+# Interface
+
+Every memory implementation follows the same contract.
+
+```ts
+interface Memory {
+
+  get(
+    sessionId: string
+  ): Promise<Message[]>;
+
+
+  add(
+    sessionId: string,
+    message: Message
+  ): Promise<void>;
+
+
+  clear(
+    sessionId: string
+  ): Promise<void>;
+
+}
+```
+
+---
+
+# Methods
+
+## `get()`
+
+Retrieves stored messages for a session.
+
+```ts
+memory.get(sessionId)
+```
+
+**Returns**
+
+```ts
+Promise<Message[]>
+```
+
+Example:
+
+```ts
+const history =
+  await memory.get(
+    "user_123"
+  );
+```
+
+---
+
+## `add()`
+
+Stores a new message.
+
+```ts
+memory.add(
+  sessionId,
+  message
+)
+```
+
+Example:
+
+```ts
+await memory.add(
+
+  "user_123",
+
+  {
+
+    role:
+      "user",
+
+    content:
+      "My name is Tejas."
+
+  }
+
+);
+```
+
+---
+
+## `clear()`
+
+Removes stored memory for a session.
+
+```ts
+memory.clear(sessionId)
+```
+
+Example:
+
+```ts
+await memory.clear(
+  "user_123"
+);
+```
+
+---
+
+# Message model
+
+Memory stores conversation messages.
+
+```ts
+interface Message {
+
+  role:
+    "user" |
+    "assistant" |
+    "system";
+
+
+  content:
+    string;
+
+}
+```
+
+Example:
+
+```ts
+{
+  role:
+    "user",
+
+  content:
+    "Remember my preferred language is TypeScript."
+}
+```
+
+---
+
+# Built-in memory implementations
+
+Agni provides multiple memory adapters.
+
+## In-memory session
+
+Stores data inside the application process.
+
+Useful for:
+
+- Development
+- Testing
+- Prototypes
+
+Example:
+
+```ts
+import {
+  InMemorySession
+} from "agni-sdk";
+
+
+const memory =
+  new InMemorySession();
+```
+
+---
+
+## SQLite session
+
+Persistent local storage.
+
+Useful for:
+
+- Local applications
+- Small deployments
+- Embedded agents
+
+Example:
+
+```ts
+import {
+  SQLiteSession
+} from "agni-sdk";
+
+
+const memory =
+  new SQLiteSession({
+    database:
+      "./agent.db"
+  });
+```
+
+---
+
+## Redis session
+
+Distributed memory storage.
+
+Useful for:
+
+- Production systems
+- Multiple servers
+- Scalable agents
+
+Example:
+
+```ts
+import {
+  RedisSession
+} from "agni-sdk";
+
+
+const memory =
+  new RedisSession({
+
+    url:
+      process.env.REDIS_URL
+
+  });
+```
+
+---
+
+# Using memory with an Agent
+
+Memory is attached to the runtime execution.
+
+```ts
+const runner =
+  new Runner({
+
+    memory,
+
+  });
+```
+
+Now executions can reuse previous context.
+
+---
+
+# Example
+
+First execution:
+
+```text
+User:
+
+"My name is Tejas."
+```
+
+Memory stores:
+
+```json
+{
+  "role": "user",
+  "content": "My name is Tejas."
+}
+```
+
+Later execution:
+
+```text
+User:
+
+"What is my name?"
+```
+
+Agent can retrieve:
+
+```text
+"Your name is Tejas."
+```
+
+---
+
+# Memory lifecycle
+
+```text
+User Request
+
+      |
+
+      v
+
+Retrieve Session Memory
+
+      |
+
+      v
+
+Build Agent Context
+
+      |
+
+      v
+
+Run Agent
+
+      |
+
+      v
+
+Store New Messages
+
+      |
+
+      v
+
+Updated Memory
+```
+
+---
+
+# Custom memory adapters
+
+You can implement your own storage backend.
+
+Example:
+
+```ts
+class PostgresMemory
+implements Memory {
+
+
+  async get(sessionId) {
+
+    return database.messages.findMany({
+      sessionId
+    });
+
+  }
+
+
+  async add(
+    sessionId,
+    message
+  ) {
+
+    await database.messages.create({
+
+      sessionId,
+
+      ...message
+
+    });
+
+  }
+
+
+  async clear(sessionId) {
+
+    await database.messages.deleteMany({
+
+      sessionId
+
+    });
+
+  }
+
+}
+```
+
+---
+
+# Production considerations
+
+For production systems consider:
+
+## Session isolation
+
+Each user should have a unique session identifier.
+
+Example:
+
+```ts
+sessionId =
+"user_123_conversation_456"
+```
+
+---
+
+## Storage selection
+
+| Storage | Best for |
+|---|---|
+| In-memory | Development |
+| SQLite | Single instance apps |
+| Redis | Distributed systems |
+| Custom database | Enterprise systems |
+
+---
+
+## Memory limits
+
+Avoid storing unlimited history.
+
+Common strategies:
+
+- Summarization
+- Message pruning
+- Token budgeting
+- Retrieval-based memory
+
+---
+
+# Related
+
+- [`Runner`](/docs/api-reference/runner)
+- [`RunContext`](/docs/api-reference/run-context)
+- [`Types`](/docs/api-reference/types)
+- [`Memory Guide`](/docs/guides/using-redis-memory)
+- [`Architecture: Memory`](/docs/architecture/memory)

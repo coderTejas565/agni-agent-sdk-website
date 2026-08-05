@@ -1,0 +1,373 @@
+---
+title: Error
+description: Understand and handle errors returned by Agni runtime.
+---
+
+# Error
+
+Agni uses a structured error system to make agent failures predictable and debuggable.
+
+Errors can occur during:
+
+- Agent execution
+- Provider communication
+- Tool execution
+- Validation
+- Runtime limits
+
+All runtime errors follow a consistent format.
+
+---
+
+## Import
+
+```ts
+import type {
+  AgniError
+} from "agni-sdk";
+```
+
+---
+
+# Error model
+
+Every Agni error contains:
+
+```ts
+interface AgniError {
+
+  code: string;
+
+  message: string;
+
+  details?: unknown;
+
+}
+```
+
+---
+
+# Properties
+
+## `code`
+
+Machine-readable error identifier.
+
+```ts
+error.code
+```
+
+**Type**
+
+```ts
+string
+```
+
+Use error codes for:
+
+- Conditional handling
+- Logging
+- Monitoring
+- Analytics
+
+Example:
+
+```ts
+"PROVIDER_ERROR"
+```
+
+---
+
+## `message`
+
+Human-readable explanation of the failure.
+
+```ts
+error.message
+```
+
+Example:
+
+```text
+Unable to generate response from provider.
+```
+
+---
+
+## `details`
+
+Additional debugging information.
+
+```ts
+error.details
+```
+
+This field is optional and depends on the error type.
+
+Example:
+
+```ts
+{
+  provider:
+    "gemini",
+
+  reason:
+    "invalid_api_key"
+}
+```
+
+---
+
+# Handling errors
+
+Errors are returned through `RunResult`.
+
+```ts
+const result =
+  await runner.run(
+
+    agent,
+
+    "Explain AI agents",
+
+    {
+      context: {},
+    }
+
+  );
+
+
+if (!result.success) {
+
+  console.error(
+    result.error
+  );
+
+}
+```
+
+---
+
+# Error codes
+
+Agni uses specific error codes for common failure scenarios.
+
+| Code | Description |
+|---|---|
+| `PROVIDER_ERROR` | AI provider request failed |
+| `TOOL_ERROR` | Tool execution failed |
+| `VALIDATION_ERROR` | Invalid input or configuration |
+| `RUNTIME_ERROR` | Internal runtime failure |
+| `LIMIT_ERROR` | Execution limit exceeded |
+
+---
+
+# Provider errors
+
+Provider errors occur when communication with an AI model fails.
+
+Common causes:
+
+- Invalid API key
+- Rate limiting
+- Provider downtime
+- Unsupported request
+
+Example:
+
+```ts
+{
+  success: false,
+
+  error: {
+
+    code:
+      "PROVIDER_ERROR",
+
+    message:
+      "Authentication failed."
+
+  }
+}
+```
+
+---
+
+# Tool errors
+
+Tool errors happen when a registered tool fails during execution.
+
+Example:
+
+```ts
+const weatherTool = {
+
+  async execute() {
+
+    throw new Error(
+      "API unavailable"
+    );
+
+  }
+
+};
+```
+
+Result:
+
+```ts
+{
+  success: false,
+
+  error: {
+
+    code:
+      "TOOL_ERROR",
+
+    message:
+      "Tool execution failed."
+
+  }
+}
+```
+
+---
+
+# Validation errors
+
+Validation errors occur when runtime inputs are invalid.
+
+Examples:
+
+- Missing required configuration
+- Invalid tool schema
+- Incorrect parameters
+
+Example:
+
+```ts
+{
+  success: false,
+
+  error: {
+
+    code:
+      "VALIDATION_ERROR"
+
+  }
+}
+```
+
+---
+
+# Runtime limits
+
+Agni can stop execution when runtime limits are reached.
+
+Examples:
+
+- Maximum turns exceeded
+- Timeout reached
+- Tool execution limit exceeded
+
+Example:
+
+```ts
+{
+  success: false,
+
+  error: {
+
+    code:
+      "LIMIT_ERROR"
+
+  }
+}
+```
+
+---
+
+# Production error handling
+
+Recommended pattern:
+
+```ts
+const result =
+  await runner.run(
+    agent,
+    input,
+    {
+      context: {},
+    }
+);
+
+
+if (!result.success) {
+
+  logger.error({
+
+    code:
+      result.error.code,
+
+    message:
+      result.error.message,
+
+    runId:
+      result.metadata.runId,
+
+  });
+
+
+  return;
+
+}
+
+
+return result.output;
+```
+
+---
+
+# Debugging workflow
+
+When an execution fails:
+
+```text
+1. Check Run ID
+
+        |
+
+        v
+
+2. Inspect runtime events
+
+        |
+
+        v
+
+3. Identify failed component
+
+        |
+
+        v
+
+4. Handle based on error code
+```
+
+Use:
+
+- `runId` from metadata
+- Runtime events
+- Error code
+- Error details
+
+to trace failures.
+
+---
+
+# Related
+
+- [`RunResult`](/docs/api-reference/run-result)
+- [`Runner`](/docs/api-reference/runner)
+- [`Events`](/docs/api-reference/events)
+- [`Tracing`](/docs/architecture/tracing)

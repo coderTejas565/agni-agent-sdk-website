@@ -1,4 +1,421 @@
 ---
-title: Page Title
-description: Short description.
+title: Types
+description: Core TypeScript types exposed by Agni SDK.
 ---
+
+# Types
+
+Agni is built with TypeScript-first design.
+
+The SDK exposes strongly typed interfaces for:
+
+- Agents
+- Providers
+- Tools
+- Runtime execution
+- Events
+- Results
+
+These types are designed to provide autocomplete, type safety, and predictable integrations.
+
+---
+
+# Core types
+
+## AgentConfig
+
+Configuration used to create an agent.
+
+```ts
+interface AgentConfig {
+
+  name: string;
+
+
+  instructions: string;
+
+
+  provider: Provider;
+
+
+  tools?: Tool[];
+
+}
+```
+
+Example:
+
+```ts
+const agent =
+  new Agent({
+
+    name:
+      "assistant",
+
+    instructions:
+      "You are helpful.",
+
+    provider,
+
+  });
+```
+
+---
+
+# Provider types
+
+## Provider
+
+Represents an AI model provider.
+
+```ts
+interface Provider {
+
+  name: string;
+
+
+  generate(
+    request: ProviderRequest
+  ):
+    Promise<ProviderResponse>;
+
+}
+```
+
+See:
+
+- [Provider API](/docs/api-reference/provider)
+- [Custom Providers](/docs/guides/custom-provider)
+
+---
+
+## ProviderRequest
+
+Input sent to a provider.
+
+```ts
+interface ProviderRequest {
+
+  messages:
+    Message[];
+
+
+  tools?:
+    Tool[];
+
+
+  instructions?:
+    string;
+
+}
+```
+
+---
+
+## ProviderResponse
+
+Normalized response returned from providers.
+
+```ts
+interface ProviderResponse {
+
+  content:
+    string;
+
+
+  toolCalls?:
+    ToolCall[];
+
+}
+```
+
+---
+
+# Tool types
+
+## Tool
+
+Defines an executable capability.
+
+```ts
+interface Tool {
+
+  name:
+    string;
+
+
+  description:
+    string;
+
+
+  parameters:
+    ToolSchema;
+
+
+  execute(
+    args:
+      unknown
+  ):
+    Promise<unknown>;
+
+}
+```
+
+See:
+
+- [Tool API](/docs/api-reference/tool)
+
+---
+
+## ToolCall
+
+Represents a requested tool execution.
+
+```ts
+interface ToolCall {
+
+  name:
+    string;
+
+
+  arguments:
+    unknown;
+
+}
+```
+
+---
+
+# Runtime types
+
+## RunContext
+
+Execution context available during a run.
+
+```ts
+interface RunContext {
+
+  runId:
+    string;
+
+
+  context:
+    Record<string, unknown>;
+
+}
+```
+
+See:
+
+- [RunContext API](/docs/api-reference/run-context)
+
+---
+
+## RunResult
+
+Normalized result returned after execution.
+
+```ts
+interface RunResult {
+
+  success:
+    boolean;
+
+
+  output?:
+    string;
+
+
+  error?:
+    AgniError;
+
+
+  metadata:
+    RunMetadata;
+
+}
+```
+
+See:
+
+- [RunResult API](/docs/api-reference/run-result)
+
+---
+
+## RunMetadata
+
+Execution metadata.
+
+```ts
+interface RunMetadata {
+
+  runId:
+    string;
+
+
+  turns:
+    number;
+
+}
+```
+
+---
+
+# Memory types
+
+## Message
+
+Conversation message stored by memory.
+
+```ts
+interface Message {
+
+  role:
+    "user"
+    |
+    "assistant"
+    |
+    "system";
+
+
+  content:
+    string;
+
+}
+```
+
+---
+
+# Event types
+
+## AgentEvent
+
+Base runtime event type.
+
+```ts
+interface AgentEvent {
+
+  type:
+    string;
+
+
+  timestamp:
+    number;
+
+
+  data:
+    unknown;
+
+}
+```
+
+Common events:
+
+```text
+agent.started
+
+turn.started
+
+provider.request
+
+provider.response
+
+tool.called
+
+tool.completed
+
+agent.completed
+```
+
+See:
+
+- [Events API](/docs/api-reference/events)
+
+---
+
+# Error types
+
+## AgniError
+
+Structured runtime error.
+
+```ts
+interface AgniError {
+
+  code:
+    string;
+
+
+  message:
+    string;
+
+
+  details?:
+    unknown;
+
+}
+```
+
+See:
+
+- [Error API](/docs/api-reference/error)
+
+---
+
+# Exported types
+
+All public types are exported from the package root.
+
+```ts
+import type {
+
+  Agent,
+
+  Tool,
+
+  Provider,
+
+  RunResult,
+
+  RunContext,
+
+  Message,
+
+} from "agni-sdk";
+```
+
+---
+
+# TypeScript support
+
+Agni works with strict TypeScript projects.
+
+Recommended configuration:
+
+```json
+{
+  "compilerOptions": {
+
+    "strict": true
+
+  }
+}
+```
+
+Strict typing helps catch:
+
+- Invalid tool schemas
+- Missing provider implementations
+- Incorrect runtime handling
+
+before execution.
+
+---
+
+# Related
+
+- [Agent](/docs/api-reference/agent)
+- [Runner](/docs/api-reference/runner)
+- [Provider](/docs/api-reference/provider)
+- [Tool](/docs/api-reference/tool)
+- [Memory](/docs/api-reference/memory)

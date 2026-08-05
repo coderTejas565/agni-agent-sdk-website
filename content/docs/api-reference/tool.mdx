@@ -1,4 +1,514 @@
 ---
-title: Page Title
-description: Short description.
+title: Tool
+description: Extend agents with custom capabilities using tools.
 ---
+
+# Tool
+
+A `Tool` allows an Agni agent to interact with external systems and execute custom logic.
+
+Tools enable agents to perform actions beyond text generation, such as:
+
+- Calling APIs
+- Querying databases
+- Reading files
+- Executing business logic
+- Accessing application services
+
+A tool is a function exposed to the model with a structured input schema.
+
+---
+
+## Import
+
+```ts
+import type { Tool } from "agni-sdk";
+```
+
+---
+
+# Tool architecture
+
+During execution, Agni manages the complete tool lifecycle.
+
+```text
+User Input
+
+    |
+
+    v
+
+  Runner
+
+    |
+
+    v
+
+ Provider
+
+    |
+
+    v
+
+Tool Selection
+
+    |
+
+    v
+
+Tool Execution
+
+    |
+
+    v
+
+Tool Result
+
+    |
+
+    v
+
+Final Response
+```
+
+The agent decides **when** a tool is required.
+
+The runtime manages **how** the tool executes.
+
+---
+
+# Type Definition
+
+```ts
+interface Tool {
+
+  name: string;
+
+  description: string;
+
+  parameters: ToolSchema;
+
+  execute(
+    args: unknown,
+    context?: RunContext
+  ): Promise<unknown>;
+
+}
+```
+
+---
+
+# Properties
+
+## `name`
+
+Unique identifier used by the model to call the tool.
+
+```ts
+tool.name
+```
+
+**Type**
+
+```ts
+string
+```
+
+Example:
+
+```ts
+"get_weather"
+```
+
+---
+
+## `description`
+
+Explains what the tool does.
+
+```ts
+tool.description
+```
+
+**Type**
+
+```ts
+string
+```
+
+The description helps the model decide when to use the tool.
+
+Example:
+
+```ts
+description:
+  "Returns the weather for a city."
+```
+
+---
+
+## `parameters`
+
+Defines the input schema expected by the tool.
+
+```ts
+tool.parameters
+```
+
+**Type**
+
+```ts
+ToolSchema
+```
+
+Agni uses this schema to describe tool arguments to the model.
+
+Example:
+
+```ts
+{
+  type: "object",
+
+  properties: {
+
+    city: {
+
+      type: "string",
+
+      description:
+        "City name"
+
+    }
+
+  },
+
+  required: [
+    "city"
+  ]
+}
+```
+
+---
+
+## `execute()`
+
+The function called when the tool is executed.
+
+```ts
+tool.execute(args)
+```
+
+**Type**
+
+```ts
+(
+ args: unknown
+) => Promise<unknown>
+```
+
+The return value is sent back to the model.
+
+---
+
+# Creating a tool
+
+Example:
+
+```ts
+import type {
+  Tool
+} from "agni-sdk";
+
+
+export const weatherTool: Tool = {
+
+  name:
+    "get_weather",
+
+
+  description:
+    "Returns the weather for a city.",
+
+
+  parameters: {
+
+    type:
+      "object",
+
+    properties: {
+
+      city: {
+
+        type:
+          "string",
+
+        description:
+          "City name",
+
+      },
+
+    },
+
+    required: [
+      "city"
+    ],
+
+  },
+
+
+  async execute(
+    { city }
+  ) {
+
+    return {
+
+      city,
+
+      temperature:
+        29,
+
+      condition:
+        "Sunny",
+
+    };
+
+  },
+
+};
+```
+
+---
+
+# Registering tools
+
+Tools are provided when creating an Agent.
+
+```ts
+const agent = new Agent({
+
+  name:
+    "weather-agent",
+
+
+  instructions:
+    "Use weather tools when required.",
+
+
+  provider,
+
+
+  tools: [
+    weatherTool
+  ],
+
+});
+```
+
+---
+
+# Running a tool-enabled agent
+
+```ts
+const result =
+  await runner.run(
+
+    agent,
+
+    "What is the weather in Pune?",
+
+    {
+
+      context: {},
+
+    }
+
+  );
+
+
+console.log(
+  result.output
+);
+```
+
+Example output:
+
+```text
+The weather in Pune today is Sunny
+with a temperature of 29 degrees Celsius.
+```
+
+---
+
+# Tool execution lifecycle
+
+When a model requests a tool:
+
+```text
+1. User sends request
+
+        |
+
+        v
+
+2. Model decides tool is required
+
+        |
+
+        v
+
+3. Runner validates tool
+
+        |
+
+        v
+
+4. Tool execute() runs
+
+        |
+
+        v
+
+5. Result returned to model
+
+        |
+
+        v
+
+6. Final response generated
+```
+
+---
+
+# Accessing RunContext
+
+Tools can access execution context.
+
+Example:
+
+```ts
+const profileTool: Tool = {
+
+  name:
+    "get_profile",
+
+
+  description:
+    "Returns user profile.",
+
+
+  parameters: {
+
+    type:
+      "object",
+
+    properties: {},
+
+  },
+
+
+  async execute(
+    _args,
+    context
+  ) {
+
+    const userId =
+      context?.context.userId;
+
+
+    return {
+
+      userId,
+
+    };
+
+  },
+
+};
+```
+
+---
+
+# Tool errors
+
+Tool failures are captured by the runtime.
+
+Example:
+
+```ts
+async execute() {
+
+  throw new Error(
+    "Database unavailable"
+  );
+
+}
+```
+
+The error is handled by Agni and returned through the execution result.
+
+---
+
+# Best practices
+
+## Keep tools focused
+
+Good:
+
+```text
+get_weather(city)
+```
+
+Avoid:
+
+```text
+do_everything()
+```
+
+---
+
+## Return structured data
+
+Prefer:
+
+```json
+{
+  "temperature": 29,
+  "condition": "Sunny"
+}
+```
+
+Instead of:
+
+```text
+"The temperature is 29 degrees."
+```
+
+Structured outputs allow the model to reason better.
+
+---
+
+## Write clear descriptions
+
+The model uses descriptions to decide tool selection.
+
+Good:
+
+```text
+Searches customer orders by email address.
+```
+
+Poor:
+
+```text
+Search tool.
+```
+
+---
+
+# Related
+
+- [`Agent`](/docs/api-reference/agent)
+- [`Runner`](/docs/api-reference/runner)
+- [`Provider`](/docs/api-reference/provider)
+- [`RunContext`](/docs/api-reference/run-context)
+- [`Custom Tools Guide`](/docs/guides/custom-tools)

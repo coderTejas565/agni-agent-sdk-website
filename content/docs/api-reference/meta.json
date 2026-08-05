@@ -1,4 +1,15 @@
 {
   "title": "API Reference",
-  "pages": ["agent", "runner", "provider", "tool", "events", "memory", "types"]
+  "pages": [
+    "agent",
+    "runner",
+    "run-context",
+    "run-result",
+    "provider",
+    "tool",
+    "events",
+    "error",
+    "memory",
+    "types"
+  ]
 }

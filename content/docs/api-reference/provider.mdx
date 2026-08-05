@@ -1,4 +1,430 @@
 ---
-title: Page Title
-description: Short description.
+title: Provider
+description: Connect Agni to language models through a provider abstraction.
 ---
+
+# Provider
+
+A `Provider` connects Agni's runtime with an AI model.
+
+Providers are responsible for:
+
+- Sending requests to language models
+- Normalizing model responses
+- Handling provider-specific communication
+
+Agni separates the runtime from model providers, allowing agents to run with different AI models without changing application logic.
+
+---
+
+## Import
+
+```ts
+import type { Provider } from "agni-sdk";
+````
+
+---
+
+# Provider architecture
+
+Agni uses a provider abstraction layer.
+
+Your application communicates with the runtime, not directly with model APIs.
+
+```
+Application
+
+    |
+
+    v
+
+  Agent
+
+    |
+
+    v
+
+ Runner
+
+    |
+
+    v
+
+ Provider
+
+    |
+
+    +----------------+
+
+    |                |
+
+ Gemini          OpenAI
+
+ Claude          Custom
+
+    |                |
+
+    +----------------+
+
+            |
+
+            v
+
+        AI Model
+```
+
+---
+
+# Interface
+
+Every provider implements the `Provider` interface.
+
+```ts
+interface Provider {
+
+  name: string;
+
+
+  generate(
+    request: ProviderRequest
+  ): Promise<ProviderResponse>;
+
+}
+```
+
+---
+
+# Properties
+
+## `name`
+
+Identifier for the provider.
+
+```ts
+provider.name
+```
+
+**Type**
+
+```ts
+string
+```
+
+Example:
+
+```ts
+"gemini"
+```
+
+---
+
+# Methods
+
+## `generate()`
+
+Generates a response from the configured model.
+
+```ts
+provider.generate(request)
+```
+
+---
+
+## Parameters
+
+### `request`
+
+The normalized model request created by Agni runtime.
+
+```ts
+ProviderRequest
+```
+
+Contains:
+
+| Field          | Type        | Description          |
+| -------------- | ----------- | -------------------- |
+| `messages`     | `Message[]` | Conversation history |
+| `tools`        | `Tool[]`    | Available tools      |
+| `instructions` | `string`    | Agent instructions   |
+| `metadata`     | `object`    | Runtime metadata     |
+
+---
+
+## Returns
+
+Returns a normalized provider response.
+
+```ts
+Promise<ProviderResponse>
+```
+
+Example:
+
+```ts
+{
+  type: "text",
+
+  content:
+    "Hello, how can I help?"
+}
+```
+
+---
+
+# Built-in providers
+
+Agni includes provider adapters for popular AI platforms.
+
+## Gemini
+
+```ts
+import {
+  GeminiProvider
+} from "agni-sdk";
+
+
+const provider =
+  new GeminiProvider({
+
+    apiKey:
+      process.env.GEMINI_API_KEY!,
+
+  });
+```
+
+---
+
+## OpenAI
+
+```ts
+import {
+  OpenAIProvider
+} from "agni-sdk";
+
+
+const provider =
+  new OpenAIProvider({
+
+    apiKey:
+      process.env.OPENAI_API_KEY!,
+
+  });
+```
+
+---
+
+## Anthropic
+
+```ts
+import {
+  AnthropicProvider
+} from "agni-sdk";
+
+
+const provider =
+  new AnthropicProvider({
+
+    apiKey:
+      process.env.ANTHROPIC_API_KEY!,
+
+  });
+```
+
+---
+
+# Using a provider
+
+Providers are passed into an Agent.
+
+```ts
+import {
+  Agent,
+  GeminiProvider,
+} from "agni-sdk";
+
+
+const provider =
+  new GeminiProvider({
+
+    apiKey:
+      process.env.GEMINI_API_KEY!,
+
+  });
+
+
+const agent =
+  new Agent({
+
+    name:
+      "assistant",
+
+    instructions:
+      "You are helpful.",
+
+    provider,
+
+  });
+```
+
+---
+
+# Provider lifecycle
+
+During execution:
+
+```
+Runner
+
+  |
+
+  v
+
+Provider Request
+
+  |
+
+  v
+
+Provider Adapter
+
+  |
+
+  v
+
+Model API
+
+  |
+
+  v
+
+Provider Response
+
+  |
+
+  v
+
+Runner
+```
+
+The runtime never needs to know which model is being used.
+
+---
+
+# Custom providers
+
+You can implement your own provider.
+
+Example:
+
+```ts
+import type {
+  Provider
+} from "agni-sdk";
+
+
+class CustomProvider
+implements Provider {
+
+
+  name =
+    "custom-provider";
+
+
+  async generate(request) {
+
+
+    const response =
+      await myModel.generate(request);
+
+
+    return {
+
+      type:
+        "text",
+
+      content:
+        response.text,
+
+    };
+
+  }
+
+}
+```
+
+---
+
+# Provider selection
+
+Agents can switch providers without changing application logic.
+
+Example:
+
+```ts
+const agent =
+  new Agent({
+
+    name:
+      "assistant",
+
+    provider:
+      geminiProvider,
+
+  });
+```
+
+Change only:
+
+```ts
+provider:
+  openAIProvider
+```
+
+The rest of the application remains unchanged.
+
+---
+
+# Error handling
+
+Provider failures are returned through `RunResult`.
+
+Common provider errors:
+
+| Error                | Description                  |
+| -------------------- | ---------------------------- |
+| Authentication error | Invalid API key              |
+| Rate limit           | Provider quota exceeded      |
+| Timeout              | Model request exceeded limit |
+| Invalid request      | Unsupported parameters       |
+
+Example:
+
+```ts
+const result =
+  await runner.run(
+    agent,
+    input,
+    {
+      context: {},
+    }
+);
+
+
+if (!result.success) {
+
+  console.error(
+    result.error
+  );
+
+}
+```
+
+---
+
+# Related
+
+* [`Agent`](/docs/api-reference/agent)
+* [`Runner`](/docs/api-reference/runner)
+* [`Tool`](/docs/api-reference/tool)
+* [`Custom Provider Guide`](/docs/guides/custom-provider)

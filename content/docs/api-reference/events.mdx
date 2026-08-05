@@ -1,4 +1,417 @@
 ---
-title: Page Title
-description: Short description.
+title: Events
+description: Monitor agent execution with runtime events.
 ---
+
+# Events
+
+Agni emits runtime events throughout the agent execution lifecycle.
+
+Events provide visibility into:
+
+- Agent execution
+- Provider requests
+- Tool execution
+- Runtime state changes
+- Debugging information
+
+Use events to build:
+
+- Logging systems
+- Observability dashboards
+- Tracing pipelines
+- Developer tooling
+
+---
+
+## Import
+
+```ts
+import type {
+  AgentEvent
+} from "agni-sdk";
+```
+
+---
+
+# Event architecture
+
+Every agent run produces a stream of lifecycle events.
+
+```text
+User Request
+
+      |
+
+      v
+
+agent.started
+
+      |
+
+      v
+
+turn.started
+
+      |
+
+      v
+
+provider.request
+
+      |
+
+      v
+
+provider.response
+
+      |
+
+      v
+
+tool.called
+
+      |
+
+      v
+
+tool.completed
+
+      |
+
+      v
+
+agent.completed
+```
+
+Events allow you to observe what happened inside the runtime without modifying your agent logic.
+
+---
+
+# Listening to events
+
+Events are available from the Runner.
+
+```ts
+const runner = new Runner();
+
+
+runner.events.on(
+
+  "tool.called",
+
+  (event) => {
+
+    console.log(
+      event.toolName
+    );
+
+  }
+
+);
+```
+
+---
+
+# Event types
+
+Agni currently supports the following runtime events.
+
+| Event | Description |
+|---|---|
+| `agent.started` | Agent execution started |
+| `agent.completed` | Agent execution finished |
+| `turn.started` | New execution turn started |
+| `provider.request` | Request sent to model provider |
+| `provider.response` | Provider returned response |
+| `tool.called` | Agent requested a tool |
+| `tool.completed` | Tool execution finished |
+
+---
+
+# Agent Events
+
+## `agent.started`
+
+Emitted when an agent begins execution.
+
+Example:
+
+```ts
+{
+  type:
+    "agent.started",
+
+  runId:
+    "run_123",
+
+  agentName:
+    "weather-agent"
+}
+```
+
+---
+
+## `agent.completed`
+
+Emitted when execution finishes.
+
+Example:
+
+```ts
+{
+  type:
+    "agent.completed",
+
+  runId:
+    "run_123",
+
+  success:
+    true
+}
+```
+
+---
+
+# Turn Events
+
+## `turn.started`
+
+A turn represents one complete runtime cycle.
+
+Example:
+
+```ts
+{
+  type:
+    "turn.started",
+
+  turn:
+    1
+}
+```
+
+A turn may contain:
+
+```text
+Provider Call
+
+     |
+
+     v
+
+Tool Execution
+
+     |
+
+     v
+
+Provider Response
+```
+
+---
+
+# Provider Events
+
+## `provider.request`
+
+Triggered before sending a request to an AI provider.
+
+Example:
+
+```ts
+{
+  type:
+    "provider.request",
+
+  provider:
+    "gemini"
+}
+```
+
+---
+
+## `provider.response`
+
+Triggered after receiving a provider response.
+
+Example:
+
+```ts
+{
+  type:
+    "provider.response",
+
+  provider:
+    "gemini",
+
+  tokens:
+    120
+}
+```
+
+---
+
+# Tool Events
+
+## `tool.called`
+
+Triggered when the model requests a tool execution.
+
+Example:
+
+```ts
+{
+  type:
+    "tool.called",
+
+  toolName:
+    "get_weather",
+
+  arguments:
+    {
+      city:
+        "Pune"
+    }
+}
+```
+
+---
+
+## `tool.completed`
+
+Triggered after a tool finishes.
+
+Example:
+
+```ts
+{
+  type:
+    "tool.completed",
+
+  toolName:
+    "get_weather",
+
+  success:
+    true
+}
+```
+
+---
+
+# Building observability
+
+Events can be connected to external monitoring systems.
+
+Example:
+
+```ts
+runner.events.on(
+
+  "agent.completed",
+
+  (event) => {
+
+    analytics.track({
+
+      name:
+        "agent_completed",
+
+      runId:
+        event.runId,
+
+    });
+
+  }
+
+);
+```
+
+Common integrations:
+
+- OpenTelemetry
+- Custom dashboards
+- Logging systems
+- Analytics pipelines
+
+---
+
+# Debugging agent execution
+
+Events are useful when understanding:
+
+- Why a tool was called
+- Which provider was used
+- How many turns executed
+- Where failures occurred
+
+Example:
+
+```ts
+runner.events.on(
+
+  "provider.request",
+
+  (event) => {
+
+    console.log(
+      "Calling provider:",
+      event.provider
+    );
+
+  }
+
+);
+```
+
+---
+
+# Event lifecycle
+
+A complete execution may look like:
+
+```text
+agent.started
+
+      |
+
+turn.started
+
+      |
+
+provider.request
+
+      |
+
+provider.response
+
+      |
+
+tool.called
+
+      |
+
+tool.completed
+
+      |
+
+provider.request
+
+      |
+
+provider.response
+
+      |
+
+agent.completed
+```
+
+---
+
+# Related
+
+- [`Runner`](/docs/api-reference/runner)
+- [`RunResult`](/docs/api-reference/run-result)
+- [`Tracing`](/docs/architecture/tracing)
+- [`Tool`](/docs/api-reference/tool)
+- [`Provider`](/docs/api-reference/provider)

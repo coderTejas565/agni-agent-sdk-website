@@ -1,4 +1,334 @@
 ---
-title: Page Title
-description: Short description.
+title: Runner
+description: Execute agents and manage the Agni runtime lifecycle.
 ---
+
+# Runner
+
+The `Runner` executes an Agent and manages the complete runtime lifecycle.
+
+It is responsible for:
+
+- Creating execution context
+- Sending requests to providers
+- Executing tools
+- Publishing runtime events
+- Returning normalized results
+
+An Agent defines **what an agent is**.
+
+The Runner defines **how the agent runs**.
+
+---
+
+## Import
+
+```ts
+import { Runner } from "agni-sdk";
+````
+
+---
+
+# Constructor
+
+Creates a new Runner instance.
+
+```ts
+new Runner(options?)
+```
+
+---
+
+## Parameters
+
+### `options`
+
+Optional runtime configuration.
+
+| Parameter  | Type       | Required | Description                         |
+| ---------- | ---------- | -------- | ----------------------------------- |
+| `eventBus` | `EventBus` | No       | Custom event bus for runtime events |
+
+---
+
+## Example
+
+```ts
+import {
+  Agent,
+  Runner,
+  GeminiProvider,
+} from "agni-sdk";
+
+
+const agent = new Agent({
+
+  name: "assistant",
+
+  provider,
+
+});
+
+
+const runner = new Runner();
+
+
+const result = await runner.run(
+  agent,
+
+  "Explain AI agents.",
+
+  {
+    context: {},
+  }
+);
+```
+
+---
+
+# Methods
+
+## `run()`
+
+Executes an Agent with the provided input.
+
+```ts
+runner.run(
+  agent,
+  input,
+  options
+)
+```
+
+---
+
+## Parameters
+
+| Parameter | Type                   | Required | Description               |
+| --------- | ---------------------- | -------- | ------------------------- |
+| `agent`   | `Agent`                | Yes      | Agent instance to execute |
+| `input`   | `string`               | Yes      | User input message        |
+| `options` | `RunOptions<TContext>` | Yes      | Runtime execution options |
+
+---
+
+## Run Options
+
+```ts
+interface RunOptions<TContext> {
+
+  context: TContext;
+
+}
+```
+
+The context object is shared throughout the execution lifecycle.
+
+It can be accessed by tools during execution.
+
+---
+
+# Returns
+
+`run()` returns a `Promise<RunResult>`.
+
+```ts
+Promise<RunResult<TOutput>>
+```
+
+Example:
+
+```ts
+const result = await runner.run(
+  agent,
+
+  "What is the weather in Pune?",
+
+  {
+    context: {},
+  }
+);
+
+
+if (result.success) {
+
+  console.log(result.output);
+
+}
+```
+
+---
+
+# Execution lifecycle
+
+When `run()` is called, Agni executes the following flow:
+
+```text
+Agent
+
+  |
+
+  v
+
+RunContext
+
+  |
+
+  v
+
+Provider Request
+
+  |
+
+  v
+
+Tool Execution
+
+  |
+
+  v
+
+Provider Response
+
+  |
+
+  v
+
+RunResult
+```
+
+---
+
+# Tool execution
+
+When a provider requests a tool call:
+
+1. Runner receives the tool request.
+2. Runner validates the registered tool.
+3. ToolExecutor executes the tool.
+4. The result is added back into the conversation.
+5. The provider generates the final response.
+
+Example:
+
+```text
+User
+ |
+ v
+Runner
+ |
+ v
+Provider
+ |
+ v
+get_weather()
+ |
+ v
+Tool Result
+ |
+ v
+Provider
+ |
+ v
+Final Answer
+```
+
+---
+
+# Events
+
+Runner emits runtime events during execution.
+
+Access events using:
+
+```ts
+runner.events
+```
+
+Example:
+
+```ts
+runner.events.on(
+  "tool.called",
+
+  (event) => {
+
+    console.log(event.toolName);
+
+  }
+);
+```
+
+Available events:
+
+| Event               | Description                    |
+| ------------------- | ------------------------------ |
+| `agent.started`     | Agent execution started        |
+| `turn.started`      | New runtime turn started       |
+| `provider.request`  | Request sent to model provider |
+| `provider.response` | Provider returned response     |
+| `tool.called`       | Tool execution started         |
+| `tool.completed`    | Tool execution completed       |
+| `agent.completed`   | Agent execution finished       |
+
+---
+
+# Custom Event Bus
+
+You can provide your own event bus implementation.
+
+```ts
+const runner = new Runner(
+  customEventBus
+);
+```
+
+This is useful for:
+
+* Logging
+* Observability
+* Tracing
+* Monitoring systems
+
+---
+
+# Error handling
+
+Runner returns failed results instead of throwing runtime errors.
+
+Example:
+
+```ts
+const result = await runner.run(
+  agent,
+
+  "Hello",
+
+  {
+    context: {},
+  }
+);
+
+
+if (!result.success) {
+
+  console.error(result.error);
+
+}
+```
+
+Possible failures include:
+
+* Provider errors
+* Tool errors
+* Maximum turn limits
+
+---
+
+# Related
+
+* [`Agent`](/docs/api-reference/agent)
+* [`RunContext`](/docs/api-reference/run-context)
+* [`RunResult`](/docs/api-reference/run-result)
+* [`Events`](/docs/api-reference/events)
+* [`Provider`](/docs/api-reference/provider)
