@@ -1,0 +1,252 @@
+---
+title: Streaming
+description: Understand how Agni exposes runtime events during agent execution.
+---
+
+# Streaming
+
+Every agent execution is a sequence of events.
+
+Instead of treating execution as a black box, Agni exposes what happens internally through a runtime event system.
+
+This makes it possible to observe, debug, and monitor agents while they are running.
+
+---
+
+## Why streaming exists
+
+Most agent frameworks only return a final response.
+
+Everything that happens before that remains hidden.
+
+Agni takes a different approach.
+
+The runtime publishes events throughout execution so applications can observe exactly what is happening.
+
+This improves:
+
+- debugging
+- observability
+- logging
+- analytics
+- developer experience
+
+---
+
+## Runtime event flow
+
+Every execution follows the same sequence.
+
+```text
+agent.started
+
+      │
+
+      ▼
+
+turn.started
+
+      │
+
+      ▼
+
+provider.request
+
+      │
+
+      ▼
+
+provider.response
+
+      │
+
+      ▼
+
+tool.called
+
+      │
+
+      ▼
+
+tool.completed
+
+      │
+
+      ▼
+
+agent.completed
+```
+
+Applications can subscribe to any stage of execution.
+
+---
+
+## Event Bus
+
+The Runner owns an Event Bus.
+
+```
+          Runner
+
+             │
+
+             ▼
+
+         Event Bus
+
+     ┌──────┼──────┐
+
+     ▼      ▼      ▼
+
+ Logger  UI  Analytics
+```
+
+Every runtime event is published through this single system.
+
+Consumers simply subscribe to the events they care about.
+
+---
+
+## Current runtime events
+
+Agni currently emits the following events.
+
+| Event               | Description                        |
+| ------------------- | ---------------------------------- |
+| `agent.started`     | Agent execution begins             |
+| `turn.started`      | A new reasoning turn starts        |
+| `provider.request`  | Request sent to the model provider |
+| `provider.response` | Provider returns a response        |
+| `tool.called`       | The model requested a tool         |
+| `tool.completed`    | Tool execution finished            |
+| `agent.completed`   | Execution finished successfully    |
+
+These events represent the complete lifecycle of a single run.
+
+---
+
+## Listening for events
+
+Applications subscribe through the Runner.
+
+```ts
+runner.events.on('tool.called', (event) => {
+  console.log(event.toolName);
+});
+```
+
+The runtime automatically publishes events.
+
+Applications simply react to them.
+
+---
+
+## Multiple subscribers
+
+One event can have multiple listeners.
+
+```
+Event
+
+   │
+
+   ├────► Logger
+
+   ├────► Metrics
+
+   ├────► Dashboard
+
+   └────► Debug Console
+```
+
+This keeps runtime execution independent from application concerns.
+
+---
+
+## Why use an Event Bus?
+
+Without an Event Bus, the Runner would need to know about:
+
+- logging
+- tracing
+- analytics
+- monitoring
+- developer tools
+
+Instead, the Runner only emits events.
+
+Everything else is built on top of those events.
+
+---
+
+## Streaming vs tracing
+
+Although related, streaming and tracing solve different problems.
+
+| Streaming             | Tracing                    |
+| --------------------- | -------------------------- |
+| Live runtime events   | Complete execution history |
+| Real-time observation | Historical analysis        |
+| Event-driven          | Span-driven                |
+| Immediate feedback    | Performance insights       |
+
+Streaming tells you **what is happening now**.
+
+Tracing explains **what happened during the entire execution**.
+
+---
+
+## Future capabilities
+
+The event system is designed to support additional runtime events as Agni evolves.
+
+Examples include:
+
+- token streaming
+- guardrail execution
+- memory retrieval
+- handoffs
+- retries
+- structured output validation
+
+These features can be added without changing how applications subscribe to events.
+
+---
+
+## Design principles
+
+Agni's streaming system is built around four principles.
+
+### Observable
+
+Important runtime actions should never be hidden.
+
+---
+
+### Lightweight
+
+Publishing events should introduce minimal overhead.
+
+---
+
+### Decoupled
+
+The runtime emits events.
+
+Applications decide what to do with them.
+
+---
+
+### Extensible
+
+New runtime features should introduce new events without breaking existing integrations.
+
+---
+
+## Next steps
+
+Continue exploring the architecture:
+
+- **Tracing** — Learn how Agni records complete execution history.
+- **Concepts** — Understand the core building blocks behind the runtime.
+- **Guides** — Build real-world agent applications using Agni.

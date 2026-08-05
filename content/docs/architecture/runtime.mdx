@@ -1,0 +1,303 @@
+---
+title: Runtime
+description: Learn how the Agni runtime executes agents through the Runner.
+---
+
+# Runtime
+
+The runtime is the heart of Agni Agent SDK.
+
+Its job is simple:
+
+> Take an Agent, execute it step by step, and return a predictable result.
+
+Unlike many agent frameworks, Agni keeps the execution loop explicit. Every stage of execution is visible, observable, and independent.
+
+---
+
+## The Runner
+
+The Runner is responsible for executing every agent.
+
+```ts
+const runner = new Runner();
+
+const result = await runner.run(agent, "What's the weather today?", {
+  context: {},
+});
+```
+
+Every execution starts here.
+
+---
+
+## Responsibilities
+
+The Runner coordinates the complete execution lifecycle.
+
+It is responsible for:
+
+- creating a `RunContext`
+- registering agent tools
+- sending requests to the provider
+- executing tool calls
+- tracking execution turns
+- publishing runtime events
+- returning a normalized `RunResult`
+
+The Runner does **not** generate AI responses itself.
+
+That responsibility belongs to the Provider.
+
+---
+
+## Execution lifecycle
+
+Every execution follows the same flow.
+
+```text
+User Input
+
+     │
+
+     ▼
+
+Create RunContext
+
+     │
+
+     ▼
+
+Register Tools
+
+     │
+
+     ▼
+
+Provider Request
+
+     │
+
+     ▼
+
+Model Response
+
+     │
+
+     ▼
+
+Tool Calls?
+
+ ┌── Yes ───────────────┐
+ │                      │
+ ▼                      │
+
+Execute Tool            │
+
+ │                      │
+
+ └───────────────▲──────┘
+
+                 │
+
+                 No
+
+                 ▼
+
+Return RunResult
+```
+
+This loop continues until the provider returns a final text response.
+
+---
+
+## RunContext
+
+Each execution creates a fresh `RunContext`.
+
+```ts
+const context = new RunContext({
+  context: {},
+  runId: createId(),
+});
+```
+
+The runtime uses it to track execution state.
+
+A RunContext stores:
+
+- unique run ID
+- current execution turn
+- application context
+
+Each execution gets its own context.
+
+Contexts are never shared between runs.
+
+---
+
+## Execution turns
+
+Large Language Models may call tools multiple times before producing a final answer.
+
+Agni calls each iteration a **turn**.
+
+```
+Turn 1
+
+Provider Request
+
+↓
+
+Tool Call
+
+↓
+
+Tool Result
+
+↓
+
+Turn 2
+
+↓
+
+Provider Request
+
+↓
+
+Final Answer
+```
+
+The runtime automatically increments the turn counter after each provider interaction.
+
+---
+
+## Limiting execution
+
+Agents can define execution limits.
+
+```ts
+const agent = new Agent({
+  ...
+
+  limits: {
+    maxTurns: 5,
+  },
+});
+```
+
+If the execution exceeds the maximum number of turns, the runtime stops automatically.
+
+This prevents infinite execution loops.
+
+---
+
+## Tool execution
+
+When the provider requests a tool:
+
+1. The Runner finds the tool.
+2. The ToolExecutor executes it.
+3. The result is added to the conversation.
+4. The provider receives the tool output.
+5. Execution continues.
+
+The Runner owns this entire process.
+
+---
+
+## Runtime events
+
+Every important action emits an event.
+
+```ts
+runner.events.on('tool.called', (event) => {
+  console.log(event.toolName);
+});
+```
+
+Examples include:
+
+- `agent.started`
+- `turn.started`
+- `provider.request`
+- `provider.response`
+- `tool.called`
+- `tool.completed`
+- `agent.completed`
+
+These events make the runtime observable without changing your application logic.
+
+---
+
+## RunResult
+
+Every execution ends with a normalized result.
+
+Success:
+
+```ts
+{
+  success: true,
+  output: "...",
+  metadata: {
+    runId: "...",
+    turns: 2,
+  },
+}
+```
+
+Failure:
+
+```ts
+{
+  success: false,
+  error: {
+    type: "provider_error",
+    message: "...",
+  },
+}
+```
+
+Because every provider returns the same result shape, application code stays simple and provider-independent.
+
+---
+
+## Runtime philosophy
+
+The Runner is intentionally small.
+
+It does **not**:
+
+- generate AI responses
+- know provider-specific APIs
+- execute business logic
+- store long-term memory
+
+Instead, it orchestrates specialized components.
+
+```
+Runner
+
+├── RunContext
+├── Provider
+├── Tool Registry
+├── Tool Executor
+├── Event Bus
+└── RunResult
+```
+
+Each component has a single responsibility.
+
+This separation makes Agni easier to understand, extend, and debug.
+
+---
+
+## Next steps
+
+Continue exploring the runtime architecture:
+
+- **Providers** — Learn how Agni communicates with language models.
+- **Tools** — Understand how tools are registered and executed.
+- **Streaming** — Explore the runtime event system.
+- **Tracing** — See how Agni exposes execution for observability.

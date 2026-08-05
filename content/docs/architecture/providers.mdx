@@ -1,0 +1,347 @@
+---
+title: Providers
+description: Understand how Agni communicates with different AI models through a unified provider interface.
+---
+
+# Providers
+
+Providers are the bridge between Agni's runtime and Large Language Models.
+
+Instead of coupling the runtime to a specific AI vendor, Agni communicates with models through a common provider interface.
+
+This allows the runtime to remain provider-agnostic.
+
+---
+
+## Why providers exist
+
+Every AI provider has its own API.
+
+For example:
+
+- OpenAI uses one request format.
+- Gemini uses another.
+- Anthropic has different message structures.
+
+If the Runner communicated directly with each provider, the runtime would become tightly coupled to provider-specific implementations.
+
+Instead, Agni introduces a Provider layer.
+
+```
+                Runner
+
+                   │
+
+                   ▼
+
+        Provider Interface
+
+      ┌────────┼─────────┐
+
+      ▼        ▼         ▼
+
+ Gemini   OpenAI   Anthropic
+```
+
+The Runner only understands the Provider interface.
+
+It never depends on vendor-specific APIs.
+
+---
+
+## Provider responsibilities
+
+Every provider is responsible for four things.
+
+### Convert runtime messages
+
+The runtime works with provider-independent messages.
+
+```ts
+[
+  {
+    role: 'user',
+    content: 'Hello',
+  },
+];
+```
+
+Each provider converts those messages into the format expected by its model.
+
+---
+
+### Call the model
+
+The provider sends the request to the underlying AI service.
+
+For example:
+
+```
+Runtime
+
+↓
+
+GeminiProvider
+
+↓
+
+Gemini API
+```
+
+The Runner never communicates with external APIs directly.
+
+---
+
+### Parse responses
+
+Each AI provider returns responses differently.
+
+Some return plain text.
+
+Others return tool calls.
+
+Some stream tokens.
+
+Providers normalize these differences into a single format understood by the runtime.
+
+---
+
+### Return normalized output
+
+Regardless of the model provider, the Runner always receives one of two responses.
+
+```ts
+TextResponse;
+```
+
+or
+
+```ts
+ToolCallResponse;
+```
+
+The runtime never needs to know which provider produced the response.
+
+---
+
+## Provider lifecycle
+
+Every execution follows the same provider lifecycle.
+
+```text
+Runner
+
+     │
+
+     ▼
+
+Provider.generate()
+
+     │
+
+     ▼
+
+Model API
+
+     │
+
+     ▼
+
+Provider parses response
+
+     │
+
+     ▼
+
+Normalized Response
+```
+
+This lifecycle remains identical for every supported provider.
+
+---
+
+## Current provider
+
+Agni currently ships with:
+
+- **GeminiProvider**
+
+Example:
+
+```ts
+import { GeminiProvider } from 'agni-agent-sdk';
+
+const provider = new GeminiProvider({
+  apiKey: process.env.GEMINI_API_KEY!,
+});
+```
+
+The provider can then be attached to an Agent.
+
+```ts
+const agent = new Agent({
+  provider,
+  ...
+});
+```
+
+---
+
+## Provider interface
+
+Every provider implements the same interface.
+
+Conceptually, it looks like this:
+
+```ts
+interface ModelProvider {
+  generate(request): Promise<ModelResponse>;
+}
+```
+
+The runtime depends on this interface rather than any concrete implementation.
+
+This makes adding new providers straightforward.
+
+---
+
+## Request flow
+
+When the Runner executes an agent, it sends a provider-independent request.
+
+```
+Runner
+
+↓
+
+ModelRequest
+
+↓
+
+Provider
+
+↓
+
+Language Model
+
+↓
+
+Provider
+
+↓
+
+ModelResponse
+
+↓
+
+Runner
+```
+
+The Provider performs all translation between the runtime and the external API.
+
+---
+
+## Tool calling
+
+Providers also translate tool definitions into the format expected by their models.
+
+The runtime supplies tool metadata.
+
+```text
+Runner
+
+↓
+
+Provider
+
+↓
+
+Model receives tool definitions
+
+↓
+
+Model requests tool
+
+↓
+
+Normalized ToolCall
+```
+
+After the provider parses the tool request, the Runner executes the tool.
+
+---
+
+## Provider independence
+
+One of Agni's design goals is minimizing vendor lock-in.
+
+Changing providers should require little or no changes to your application.
+
+```ts
+const provider = new GeminiProvider(...);
+```
+
+can later become
+
+```ts
+const provider = new OpenAIProvider(...);
+```
+
+while the rest of your application remains unchanged.
+
+The Agent, Runner, and Tools continue working exactly the same way.
+
+---
+
+## Internal architecture
+
+Each provider is composed of smaller components.
+
+For Gemini, the flow looks like this.
+
+```text
+GeminiProvider
+
+├── Request Builder
+├── Role Mapper
+├── API Client
+└── Response Parser
+```
+
+Breaking providers into dedicated components keeps them easier to maintain and extend.
+
+---
+
+## Design principles
+
+Agni providers follow a few core principles.
+
+### Runtime first
+
+The runtime owns execution.
+
+Providers only communicate with models.
+
+---
+
+### Normalize everything
+
+The Runner should receive the same response shape regardless of which AI provider generated it.
+
+---
+
+### Keep vendor-specific logic isolated
+
+Anything specific to a model provider belongs inside that provider implementation.
+
+It should never leak into the runtime.
+
+---
+
+## Next steps
+
+Now that you understand how providers communicate with language models, continue with:
+
+- **Tools** — Learn how agents interact with external systems.
+- **Memory** — Understand how execution state can persist across conversations.
+- **Streaming** — Explore runtime events emitted during execution.

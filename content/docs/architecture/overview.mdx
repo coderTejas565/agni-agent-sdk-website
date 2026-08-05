@@ -1,0 +1,245 @@
+---
+title: Architecture Overview
+description: Understand how Agni Agent SDK executes AI agents from input to final response.
+---
+
+# Architecture Overview
+
+Agni Agent SDK is built around a simple idea:
+
+> The runtime should orchestrate execution, not hide it.
+
+Instead of abstracting away the execution loop, Agni keeps every stage explicit and observable.
+
+Every agent execution follows the same lifecycle regardless of the underlying AI model.
+
+---
+
+## The execution flow
+
+```
+                User Input
+                     │
+                     ▼
+                  Agent
+                     │
+                     ▼
+                 Runner
+                     │
+      ┌──────────────┼──────────────┐
+      │              │              │
+      ▼              ▼              ▼
+  RunContext     Provider       Tool Registry
+                     │              │
+                     ▼              ▼
+                Language Model   Tool Execution
+                     │              │
+      └──────────────┼──────────────┘
+                     ▼
+              Normalized Response
+                     │
+                     ▼
+                RunResult
+```
+
+Every execution begins with a user request and ends with a normalized `RunResult`.
+
+The Runner coordinates every step in between.
+
+---
+
+## Core building blocks
+
+Agni separates responsibilities into independent components.
+
+### Agent
+
+The Agent defines your AI application's behavior.
+
+It contains:
+
+- identity
+- instructions
+- provider
+- available tools
+- execution limits
+
+The Agent is configuration only.
+
+It never executes requests directly.
+
+---
+
+### Runner
+
+The Runner is the orchestrator of the entire runtime.
+
+Its responsibilities include:
+
+- creating execution context
+- communicating with providers
+- executing tools
+- tracking execution turns
+- publishing runtime events
+- returning a normalized result
+
+Every agent execution goes through the Runner.
+
+---
+
+### Provider
+
+Providers connect Agni to language models.
+
+A provider is responsible for:
+
+- converting runtime messages into provider requests
+- communicating with the model API
+- parsing model responses
+- returning provider-agnostic output
+
+Because of this abstraction, the runtime never depends on a specific AI provider.
+
+---
+
+### Tools
+
+Tools allow agents to interact with external systems.
+
+Examples include:
+
+- databases
+- REST APIs
+- search engines
+- file systems
+- internal business logic
+
+The runtime manages the complete tool lifecycle.
+
+---
+
+### RunContext
+
+Every execution creates a RunContext.
+
+It stores execution state such as:
+
+- run identifier
+- current turn
+- application context
+
+RunContext exists only for the lifetime of a single execution.
+
+---
+
+## Why this architecture?
+
+Many AI frameworks combine multiple responsibilities inside one abstraction.
+
+Agni intentionally separates them.
+
+| Component  | Responsibility        |
+| ---------- | --------------------- |
+| Agent      | Configuration         |
+| Runner     | Execution             |
+| Provider   | Model communication   |
+| Tools      | External capabilities |
+| RunContext | Runtime state         |
+
+This separation makes the runtime easier to understand, extend, and debug.
+
+---
+
+## Runtime lifecycle
+
+A simplified execution looks like this:
+
+```
+Create Agent
+
+      │
+
+      ▼
+
+Create RunContext
+
+      │
+
+      ▼
+
+Send Request
+
+      │
+
+      ▼
+
+Provider Response
+
+      │
+
+      ▼
+
+Tool Calls (if needed)
+
+      │
+
+      ▼
+
+Final Response
+
+      │
+
+      ▼
+
+RunResult
+```
+
+Each stage is observable through Agni's runtime events.
+
+---
+
+## Architecture principles
+
+Agni follows a small set of design principles.
+
+### Explicit execution
+
+Execution should be visible.
+
+The runtime should never hide what happens internally.
+
+---
+
+### Provider independence
+
+Application code should not depend on a specific model provider.
+
+Changing providers should require minimal code changes.
+
+---
+
+### Single responsibility
+
+Every runtime component has one clear responsibility.
+
+This keeps the architecture modular and maintainable.
+
+---
+
+### Observability
+
+Every important runtime action can be monitored.
+
+This makes debugging agent behavior significantly easier.
+
+---
+
+## Continue exploring
+
+Dive deeper into each subsystem:
+
+- **Runtime** — Learn how the Runner executes agents.
+- **Providers** — Understand provider abstraction.
+- **Tools** — See how tools are registered and executed.
+- **Streaming** — Explore runtime events.
+- **Tracing** — Learn how Agni exposes execution for debugging.

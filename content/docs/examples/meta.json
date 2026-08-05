@@ -1,0 +1,4 @@
+{
+  "title": "Examples",
+  "pages": ["weather-agent", "chat-agent", "rag-agent", "research-agent"]
+}

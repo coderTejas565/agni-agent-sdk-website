@@ -1,0 +1,234 @@
+---
+title: Tracing
+description: Understand how Agni records complete agent executions for debugging and observability.
+---
+
+# Tracing
+
+Tracing records everything that happens during an agent execution.
+
+While streaming provides live runtime events, tracing builds a complete execution history that can be inspected after a run finishes.
+
+This makes debugging complex agent systems significantly easier.
+
+---
+
+## Why tracing exists
+
+As agents become more capable, understanding _why_ they produced a result becomes increasingly important.
+
+Questions like these become difficult to answer without tracing:
+
+- Which provider generated this response?
+- Which tools were executed?
+- How many reasoning turns occurred?
+- Where did execution fail?
+- How long did each step take?
+
+Tracing provides those answers.
+
+---
+
+## Execution trace
+
+A trace represents one complete execution.
+
+```text
+Run
+
+│
+
+├── Agent Started
+
+├── Turn 1
+
+│     ├── Provider Request
+
+│     ├── Provider Response
+
+│     ├── Tool Call
+
+│     └── Tool Result
+
+├── Turn 2
+
+│     ├── Provider Request
+
+│     └── Provider Response
+
+└── Agent Completed
+```
+
+Every significant runtime action becomes part of the execution trace.
+
+---
+
+## Trace hierarchy
+
+Tracing organizes execution into nested spans.
+
+```text
+Trace
+
+└── Runner
+
+      ├── Provider
+
+      ├── Tool
+
+      ├── Provider
+
+      └── Tool
+```
+
+This hierarchy makes it easy to understand how the execution progressed.
+
+---
+
+## What gets traced
+
+A trace can include information such as:
+
+- execution start time
+- execution end time
+- total duration
+- provider requests
+- provider responses
+- tool execution
+- reasoning turns
+- runtime errors
+
+Together, these form a complete picture of an agent run.
+
+---
+
+## Spans
+
+Each unit of work is represented as a span.
+
+Examples include:
+
+- Runner execution
+- Provider request
+- Tool execution
+- Guardrail validation
+- Memory retrieval
+
+Every span records:
+
+- start time
+- end time
+- duration
+- status
+- metadata
+
+This makes performance analysis straightforward.
+
+---
+
+## Relationship with streaming
+
+Streaming and tracing work together.
+
+| Streaming          | Tracing                   |
+| ------------------ | ------------------------- |
+| Live events        | Complete execution record |
+| Real-time updates  | Historical inspection     |
+| Event-based        | Span-based                |
+| Runtime monitoring | Debugging and analysis    |
+
+Streaming tells you what is happening now.
+
+Tracing tells you everything that happened.
+
+---
+
+## Planned exporters
+
+Agni's tracing system is designed to support multiple exporters.
+
+```
+           Trace
+
+              │
+
+     ┌────────┼────────┐
+
+     ▼        ▼        ▼
+
+ Console    JSON    OpenTelemetry
+```
+
+Applications can choose where trace data should be stored or visualized.
+
+---
+
+## Why tracing is separate
+
+The Runner should execute agents.
+
+Tracing should observe execution.
+
+Keeping these responsibilities separate allows observability to evolve without changing the runtime.
+
+---
+
+## Future capabilities
+
+The tracing architecture is designed to support:
+
+- distributed tracing
+- OpenTelemetry integration
+- timeline visualization
+- execution replay
+- latency analysis
+- cost tracking
+- token usage metrics
+
+These capabilities can be added without changing how the Runner executes agents.
+
+---
+
+## Design principles
+
+Agni's tracing system follows four principles.
+
+### Complete
+
+Every important runtime operation should be traceable.
+
+---
+
+### Low overhead
+
+Tracing should have minimal impact on execution performance.
+
+---
+
+### Provider agnostic
+
+Tracing should work the same regardless of which model provider is used.
+
+---
+
+### Exportable
+
+Trace data should be usable by external observability tools.
+
+---
+
+## Current status
+
+Agni's tracing architecture has been designed, with foundational tracing components in place.
+
+As the SDK evolves, tracing will become the foundation for production debugging, performance analysis, and runtime observability.
+
+---
+
+## Next steps
+
+Continue exploring Agni:
+
+- **Concepts** — Learn the core ideas behind the runtime.
+- **Guides** — Build production-ready agent applications.
+- **API Reference** — Explore every public API exposed by the SDK.

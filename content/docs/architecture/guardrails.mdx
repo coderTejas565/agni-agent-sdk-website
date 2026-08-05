@@ -1,0 +1,284 @@
+---
+title: Guardrails
+description: Understand how guardrails validate agent inputs and outputs before they reach your application.
+---
+
+# Guardrails
+
+Guardrails allow applications to validate data before and after an agent executes.
+
+They help ensure that AI systems remain safe, reliable, and predictable.
+
+Rather than relying entirely on model behavior, guardrails introduce explicit validation into the execution pipeline.
+
+---
+
+## Why guardrails exist
+
+Language models are probabilistic.
+
+They can:
+
+- generate invalid data
+- ignore instructions
+- produce unsafe responses
+- hallucinate information
+- violate business rules
+
+Guardrails give your application an opportunity to detect and handle these situations before they become problems.
+
+---
+
+## Execution flow
+
+Guardrails surround the runtime.
+
+```text
+User Input
+
+      │
+
+      ▼
+
+Input Guardrails
+
+      │
+
+      ▼
+
+Runner
+
+      │
+
+      ▼
+
+Provider
+
+      │
+
+      ▼
+
+Tool Execution
+
+      │
+
+      ▼
+
+Output Guardrails
+
+      │
+
+      ▼
+
+Final Result
+```
+
+Every request passes through validation before it reaches the application.
+
+---
+
+## Input guardrails
+
+Input guardrails run before the provider receives a request.
+
+Typical use cases include:
+
+- validating user input
+- blocking prompt injection
+- removing sensitive information
+- enforcing business rules
+- checking required context
+
+If validation fails, execution can stop immediately.
+
+---
+
+## Output guardrails
+
+Output guardrails execute after the model generates a response.
+
+Examples include:
+
+- schema validation
+- response moderation
+- toxicity detection
+- PII detection
+- business rule validation
+
+Only validated responses are returned to the application.
+
+---
+
+## Planned architecture
+
+Guardrails are designed as independent components.
+
+```
+             Runner
+
+                │
+
+     ┌──────────┴──────────┐
+
+     ▼                     ▼
+
+Input Guardrail     Output Guardrail
+```
+
+The runtime coordinates execution.
+
+Each guardrail focuses on a single validation responsibility.
+
+---
+
+## Guardrail lifecycle
+
+Every execution follows the same validation sequence.
+
+```text
+Receive Request
+
+      │
+
+      ▼
+
+Validate Input
+
+      │
+
+      ▼
+
+Execute Agent
+
+      │
+
+      ▼
+
+Validate Output
+
+      │
+
+      ▼
+
+Return Result
+```
+
+If any validation step fails, the runtime can stop execution before returning a response.
+
+---
+
+## Planned built-in guardrails
+
+Agni is designed to support common validation scenarios out of the box.
+
+Examples include:
+
+- PII filtering
+- schema validation
+- content moderation
+- output repair
+- custom validation rules
+
+Applications can choose only the guardrails they need.
+
+---
+
+## Custom guardrails
+
+Applications are not limited to built-in validators.
+
+Developers will be able to define custom guardrails for application-specific rules.
+
+Examples include:
+
+- checking subscription limits
+- validating database permissions
+- restricting tool usage
+- enforcing organization policies
+
+This allows business logic to remain separate from the runtime itself.
+
+---
+
+## Why separate guardrails from tools?
+
+Tools perform actions.
+
+Guardrails validate execution.
+
+For example:
+
+```
+Tool
+
+↓
+
+Send Email
+```
+
+versus
+
+```
+Guardrail
+
+↓
+
+Should this email be allowed?
+```
+
+Keeping these responsibilities separate makes the runtime easier to reason about.
+
+---
+
+## Design principles
+
+Agni's guardrail system is designed around four principles.
+
+### Optional
+
+Simple agents should not require guardrails.
+
+---
+
+### Independent
+
+Guardrails operate independently from providers and tools.
+
+---
+
+### Composable
+
+Applications can combine multiple guardrails in a single execution pipeline.
+
+---
+
+### Predictable
+
+Validation should be explicit.
+
+Every rejected request should have a clear reason.
+
+---
+
+## Future direction
+
+As Agni evolves, the guardrail system is designed to support:
+
+- input validation
+- output validation
+- tool approval workflows
+- human-in-the-loop review
+- automatic output repair
+- policy-based execution
+
+These capabilities will build on the same guardrail pipeline without changing the Runner's overall architecture.
+
+---
+
+## Next steps
+
+Continue exploring the architecture:
+
+- **Tracing** — Learn how Agni exposes execution for debugging and observability.
+- **Streaming** — Understand the runtime event system.
+- **Concepts** — Explore the core ideas behind Agents, Providers, and Tools.

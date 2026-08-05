@@ -1,12 +1,244 @@
 ---
-title: Installation
-description: Install Agni SDK and configure your first project.
+title: Introduction
+description: Learn what Agni Agent SDK is and why it exists.
 ---
 
-# Installation
+# Build reliable AI agents with control
 
-Install Agni SDK using your package manager.
+AI agents are moving from simple chat interfaces to systems that can reason, use tools, access data, and complete complex workflows.
 
-```bash
-pnpm add agni-agent-sdk
+Building these systems introduces new challenges:
+
+- How does the agent decide what to do?
+- How are tools executed safely?
+- How do you switch between AI providers?
+- How do you debug unexpected behavior?
+- How do you observe the complete execution flow?
+
+Agni Agent SDK is built to solve these problems.
+
+---
+
+## What is Agni?
+
+Agni is a TypeScript-first runtime for building reliable AI agents.
+
+It provides the core primitives required to build agent systems:
+
+- **Agents** — define behavior, instructions, and capabilities
+- **Providers** — connect to different AI models
+- **Tools** — give agents access to external capabilities
+- **Runner** — manages the complete execution lifecycle
+- **Events** — observe what happens during execution
+
+Instead of hiding the agent loop behind abstractions, Agni keeps the runtime explicit.
+
+---
+
+## The Agni philosophy
+
+Most AI frameworks focus on making agents easy to create.
+
+Agni focuses on making agents easy to understand.
+
+A production agent needs more than generating a response.
+
+It needs:
+
+- predictable execution
+- transparent decisions
+- debuggable workflows
+- provider flexibility
+- observable behavior
+
+Agni treats the agent runtime as infrastructure.
+
+---
+
+## How Agni works
+
+At a high level, every Agni execution follows this flow:
+
 ```
+
+User Input
+
+```
+
+|
+
+v
+
+```
+
+Agent
+
+```
+
+|
+
+v
+
+```
+
+Runner
+
+```
+
+|
+
+```
+
++-----------+
+
+|           |
+
+Provider   Tools
+
+|           |
+
++-----------+
+
+```
+
+|
+
+v
+
+```
+
+Final Result
+
+```
+
+The responsibilities are separated:
+
+### Agent
+
+Defines what the agent is.
+
+Example:
+
+- name
+- instructions
+- available tools
+- capabilities
+
+---
+
+### Provider
+
+Defines how the agent communicates with an AI model.
+
+Providers handle:
+
+- model requests
+- response parsing
+- tool call extraction
+
+Agni keeps this layer replaceable.
+
+---
+
+### Runner
+
+The Runner is the execution engine.
+
+It manages:
+
+- execution context
+- provider communication
+- tool execution
+- runtime events
+- final results
+
+---
+
+### Tools
+
+Tools allow agents to interact with the outside world.
+
+Examples:
+
+- APIs
+- databases
+- search systems
+- custom business logic
+
+Agni treats tools as first-class runtime capabilities.
+
+---
+
+## Why not hide the runtime?
+
+Agent systems become difficult to debug when important decisions happen invisibly.
+
+Agni exposes the execution lifecycle:
+
+```
+
+Agent Started
+
+```
+
+↓
+
+```
+
+Provider Request
+
+```
+
+↓
+
+```
+
+Tool Called
+
+```
+
+↓
+
+```
+
+Tool Completed
+
+```
+
+↓
+
+```
+
+Agent Completed
+
+```
+
+This makes it possible to understand:
+
+- what happened
+- why it happened
+- where failures occurred
+
+---
+
+## What you can build with Agni
+
+Agni can power:
+
+- AI assistants
+- research agents
+- RAG applications
+- workflow automation
+- multi-agent systems
+- developer tools
+
+---
+
+## What you will learn next
+
+Continue with the Getting Started guide:
+
+1. Install Agni
+2. Create your first agent
+3. Understand the runtime
+4. Add tools and capabilities

@@ -1,0 +1,13 @@
+{
+  "title": "Architecture",
+  "pages": [
+    "overview",
+    "runtime",
+    "providers",
+    "tools",
+    "memory",
+    "guardrails",
+    "streaming",
+    "tracing"
+  ]
+}

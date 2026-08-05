@@ -1,80 +1,280 @@
 ---
-title: Page Title
-description: Short description.
----
-
----
-
-## `getting-started/quickstart.mdx`
-
-````mdx
----
 title: Quickstart
-description: Create your first AI agent using Agni SDK.
+description: Build your first AI agent with Agni Agent SDK.
 ---
 
-# Quickstart
+# Build your first AI agent
 
-Create an agent:
+This guide will help you create your first Agni agent.
 
-````ts
-import {
-  Agent,
-  Runner,
-  GeminiProvider
-} from "agnia-agent-sdk";
+You will build a simple AI assistant using:
 
+- **Agent** — defines your agent behavior
+- **GeminiProvider** — connects Agni to an AI model
+- **Runner** — executes the agent lifecycle
+
+By the end, you will have a working AI agent running locally.
+
+---
+
+## Create a new project
+
+Create a new TypeScript project:
+
+```bash
+mkdir my-agni-agent
+
+cd my-agni-agent
+
+npm init -y
+```
+
+Install Agni:
+
+```bash
+npm install agni-agent-sdk
+```
+
+Install environment variable support:
+
+```bash
+npm install dotenv
+```
+
+---
+
+## Add your API key
+
+Create a `.env` file:
+
+```text
+GEMINI_API_KEY=your_api_key_here
+```
+
+Replace the value with your Gemini API key.
+
+---
+
+## Create your first agent
+
+Create a file:
+
+```
+index.ts
+```
+
+Add the following:
+
+```ts
+import 'dotenv/config';
+
+import { Agent, Runner, GeminiProvider } from 'agni-agent-sdk';
 
 const provider = new GeminiProvider({
-  apiKey: process.env.GEMINI_API_KEY,
+  apiKey: process.env.GEMINI_API_KEY!,
 });
 
-
 const agent = new Agent({
-  name: "assistant",
+  name: 'assistant',
+
+  instructions: 'You are a helpful AI assistant.',
+
   provider,
 });
 
-
 const runner = new Runner();
-
 
 const result = await runner.run(
   agent,
-  "Hello Agni",
+
+  'Explain how AI agents work.',
+
   {
     context: {},
-  }
+  },
 );
 
-
-console.log(result.output);
-
+if (result.success) {
+  console.log(result.output);
+}
+```
 
 ---
 
-## Step 2: For folders, create navigation order
+## Run your agent
 
-Fumadocs reads file order from `meta.json`.
-
-Create:
+Execute the file:
 
 ```bash
-content/docs/meta.json
+npx tsx index.ts
+```
 
+You should see a response from your agent:
 
-Example:
+```text
+AI agents are systems that can understand goals,
+reason about tasks, use tools, and complete actions.
+```
 
+Congratulations 🎉
+
+You have created your first Agni agent.
+
+---
+
+## Understanding the code
+
+The quickstart example uses three core Agni primitives.
+
+---
+
+## Agent
+
+The Agent defines what your AI system is.
+
+```ts
+const agent = new Agent({
+  name: 'assistant',
+
+  instructions: 'You are a helpful AI assistant.',
+
+  provider,
+});
+```
+
+It contains:
+
+- identity
+- instructions
+- capabilities
+- model provider
+
+The Agent does not execute anything by itself.
+
+---
+
+## Provider
+
+The Provider connects Agni with an AI model.
+
+```ts
+const provider = new GeminiProvider({
+  apiKey: process.env.GEMINI_API_KEY!,
+});
+```
+
+The provider handles:
+
+- sending requests to the model
+- receiving responses
+- normalizing model output
+
+Your application stays independent from the model implementation.
+
+---
+
+## Runner
+
+The Runner executes the agent.
+
+```ts
+const result = await runner.run(agent, 'Explain how AI agents work.', {
+  context: {},
+});
+```
+
+The Runner manages:
+
+1. Creating execution context
+2. Calling the provider
+3. Handling tool execution
+4. Tracking runtime events
+5. Returning the final result
+
+---
+
+## What happens internally?
+
+When you call:
+
+```ts
+runner.run();
+```
+
+Agni starts the execution lifecycle:
+
+```
+User Input
+
+     |
+
+     v
+
+   Agent
+
+     |
+
+     v
+
+  Runner
+
+     |
+
+     v
+
+ Provider
+
+     |
+
+     v
+
+ Model Response
+
+     |
+
+     v
+
+ Final Result
+```
+
+The runtime keeps this process explicit and observable.
+
+---
+
+## Handling results
+
+Every Agni run returns a normalized result.
+
+Success:
+
+```ts
 {
-  "title": "Documentation",
-  "pages": [
-    "index",
-    "getting-started",
-    "concepts",
-    "guides",
-    "examples",
-    "api-reference"
-  ]
+  success: true,
+  output: "Agent response",
+  metadata: {
+    runId: "..."
+  }
 }
-````
-````
+```
+
+Failure:
+
+```ts
+{
+  success: false,
+  error: {
+    type: "...",
+    message: "..."
+  }
+}
+```
+
+This makes agent execution predictable across providers.
+
+---
+
+## Next steps
+
+Now that you have a working agent, learn how to customize it.
+
+Continue:

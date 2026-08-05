@@ -4,7 +4,7 @@ import {
   DocsBody,
   DocsTitle,
   DocsDescription,
-} from "fumadocs-ui/layouts/glass/page";
+} from 'fumadocs-ui/layouts/glass/page';
 import { notFound } from 'next/navigation';
 import { getMDXComponents } from '@/components/mdx';
 import type { Metadata } from 'next';

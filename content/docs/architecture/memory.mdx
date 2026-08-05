@@ -1,0 +1,261 @@
+---
+title: Memory
+description: Understand how Agni's memory system is designed to persist conversations across agent runs.
+---
+
+# Memory
+
+By default, every Agni execution is stateless.
+
+A `Runner` creates a new execution, processes the request, returns a result, and then the execution ends.
+
+```
+Run 1
+
+↓
+
+RunContext
+
+↓
+
+RunResult
+
+──────────────
+
+Run 2
+
+↓
+
+New RunContext
+
+↓
+
+RunResult
+```
+
+Nothing is remembered between runs unless a memory implementation is used.
+
+---
+
+## Why memory exists
+
+Real AI applications rarely consist of a single request.
+
+Users expect agents to remember:
+
+- previous conversations
+- preferences
+- completed tasks
+- important facts
+- long-running workflows
+
+Memory allows an agent to continue conversations across multiple executions.
+
+---
+
+## Runtime state vs Memory
+
+Agni intentionally separates temporary execution state from long-term memory.
+
+| Runtime State              | Memory                      |
+| -------------------------- | --------------------------- |
+| Exists for one run         | Persists across runs        |
+| Stored in RunContext       | Stored in a Session         |
+| Tracks execution           | Stores conversation history |
+| Destroyed after completion | Can live indefinitely       |
+
+This separation keeps the runtime predictable while allowing applications to choose how conversations should be stored.
+
+---
+
+## Planned architecture
+
+Agni's memory system is designed around a Session abstraction.
+
+```
+                Runner
+
+                   │
+
+                   ▼
+
+                Session
+
+      ┌──────────┼──────────┐
+
+      ▼          ▼          ▼
+
+ InMemory     Redis      SQLite
+```
+
+The Runner interacts with a Session interface.
+
+Individual storage implementations remain independent from the runtime.
+
+---
+
+## Session lifecycle
+
+A typical execution with memory looks like this.
+
+```text
+User Input
+
+      │
+
+      ▼
+
+Load Session
+
+      │
+
+      ▼
+
+Conversation History
+
+      │
+
+      ▼
+
+Provider
+
+      │
+
+      ▼
+
+Tool Calls
+
+      │
+
+      ▼
+
+Final Response
+
+      │
+
+      ▼
+
+Persist Messages
+```
+
+Instead of starting with an empty conversation, the Runner loads previous messages before contacting the provider.
+
+---
+
+## Supported implementations
+
+Agni is designed to support multiple storage backends.
+
+### InMemory Session
+
+Useful during development.
+
+Messages exist only while the application is running.
+
+---
+
+### Redis Session
+
+Ideal for distributed applications.
+
+Allows multiple runtime instances to share conversation history.
+
+---
+
+### SQLite Session
+
+A lightweight persistent option for local applications and prototypes.
+
+---
+
+## Session interface
+
+Every storage implementation follows the same contract.
+
+Conceptually:
+
+```ts
+interface Session {
+  load();
+
+  save();
+
+  clear();
+}
+```
+
+Because the Runner depends only on the interface, switching storage backends does not change application code.
+
+---
+
+## Why Sessions?
+
+Many frameworks tightly couple conversation storage with the runtime.
+
+Agni intentionally keeps them separate.
+
+Benefits include:
+
+- easier testing
+- storage flexibility
+- provider independence
+- predictable runtime behavior
+
+The runtime should execute agents.
+
+Sessions should store conversations.
+
+---
+
+## Future direction
+
+The memory architecture is designed to support more advanced capabilities, including:
+
+- conversation history
+- semantic retrieval
+- vector memory
+- user profiles
+- long-term knowledge
+- hybrid memory strategies
+
+These capabilities will build on the same Session abstraction without changing the Runner.
+
+---
+
+## Design principles
+
+Agni's memory system follows four core principles.
+
+### Optional
+
+Applications should not be forced to use memory.
+
+Simple agents should remain simple.
+
+---
+
+### Storage agnostic
+
+The runtime should work with any storage backend.
+
+---
+
+### Persistent
+
+Conversation history should survive process restarts when using persistent storage.
+
+---
+
+### Extensible
+
+Developers should be able to implement custom session adapters without modifying the runtime.
+
+---
+
+## Next steps
+
+Continue exploring the architecture:
+
+- **Guardrails** — Validate requests before and after execution.
+- **Streaming** — Understand runtime events.
+- **Tracing** — Learn how Agni exposes execution for debugging and observability.

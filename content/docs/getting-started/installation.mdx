@@ -1,4 +1,176 @@
 ---
-title: Page Title
-description: Short description.
+title: Installation
+description: Install Agni Agent SDK and prepare your development environment.
 ---
+
+# Install Agni Agent SDK
+
+Agni is distributed as an npm package and works with modern TypeScript and JavaScript applications.
+
+Before installing Agni, make sure your environment has:
+
+- Node.js 18 or higher
+- npm, pnpm, or yarn
+- A TypeScript or JavaScript project
+
+---
+
+## Install the package
+
+Choose your preferred package manager.
+
+### npm
+
+```bash
+npm install agni-agent-sdk
+```
+
+### pnpm
+
+```bash
+pnpm add agni-agent-sdk
+```
+
+### yarn
+
+```bash
+yarn add agni-agent-sdk
+```
+
+---
+
+## Configure a model provider
+
+Agni separates the agent runtime from AI model providers.
+
+To run an agent, you need:
+
+1. Agni SDK
+2. A supported provider
+3. Provider credentials
+
+Currently supported provider:
+
+- Gemini
+
+The provider layer is designed to be extensible, allowing additional model providers to be added without changing your agent code.
+
+---
+
+## Add your API key
+
+Create a `.env` file in your project:
+
+```bash
+GEMINI_API_KEY=your_api_key_here
+```
+
+Then load environment variables in your application:
+
+```ts
+import 'dotenv/config';
+```
+
+Agni does not manage API keys internally.
+
+Your application is responsible for:
+
+- storing credentials securely
+- loading environment variables
+- configuring providers
+
+---
+
+## TypeScript configuration
+
+Agni is built with TypeScript and works with modern module systems.
+
+Recommended `tsconfig.json` configuration:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true
+  }
+}
+```
+
+---
+
+## Verify installation
+
+Create a test file:
+
+```ts
+import { Agent } from 'agni-agent-sdk';
+
+console.log('Agni installed successfully');
+```
+
+Run your application:
+
+```bash
+pnpm dev
+```
+
+If your project starts without import errors, Agni is ready to use.
+
+---
+
+## Recommended project structure
+
+A typical Agni project:
+
+```
+my-agent-app/
+
+├── src/
+│
+│   ├── agent.ts
+│   ├── tools/
+│   └── index.ts
+│
+├── .env
+├── package.json
+└── tsconfig.json
+```
+
+A clean separation:
+
+### Agent definition
+
+Contains:
+
+- agent instructions
+- provider configuration
+- available tools
+
+### Tools
+
+Contains external capabilities your agent can use.
+
+Examples:
+
+- APIs
+- databases
+- search systems
+- application services
+
+### Application layer
+
+Handles:
+
+- user input
+- API routes
+- business logic
+
+---
+
+## Next steps
+
+Agni is installed and ready.
+
+Create your first working agent:

@@ -1,0 +1,417 @@
+---
+title: Tools
+description: Understand how Agni executes tools and extends agent capabilities.
+---
+
+# Tools
+
+Large Language Models can reason.
+
+They cannot interact with the outside world.
+
+Tools allow agents to perform real actions.
+
+Examples include:
+
+- Searching the web
+- Reading a database
+- Calling REST APIs
+- Sending emails
+- Querying internal services
+- Running business logic
+
+The runtime manages the complete lifecycle of every tool invocation.
+
+---
+
+## Why tools exist
+
+Without tools, an AI model can only generate text.
+
+For example, if you ask:
+
+> "What's the weather in Pune?"
+
+A language model can only guess.
+
+With a weather tool, the execution becomes:
+
+```
+User
+
+↓
+
+Runner
+
+↓
+
+Provider
+
+↓
+
+Tool Call
+
+↓
+
+Weather API
+
+↓
+
+Tool Result
+
+↓
+
+Provider
+
+↓
+
+Final Answer
+```
+
+The model reasons.
+
+The tool performs the action.
+
+---
+
+## Tool lifecycle
+
+Every tool execution follows the same flow.
+
+```text
+Language Model
+
+      │
+
+      ▼
+
+Tool Request
+
+      │
+
+      ▼
+
+Runner
+
+      │
+
+      ▼
+
+Tool Registry
+
+      │
+
+      ▼
+
+Tool Executor
+
+      │
+
+      ▼
+
+Tool Function
+
+      │
+
+      ▼
+
+Tool Result
+
+      │
+
+      ▼
+
+Conversation History
+
+      │
+
+      ▼
+
+Language Model
+```
+
+The runtime owns this entire lifecycle.
+
+---
+
+## Tool registration
+
+Agents declare the tools they can use.
+
+```ts
+const agent = new Agent({
+  ...
+
+  tools: [
+    weatherTool,
+    searchTool,
+  ],
+});
+```
+
+During execution, the Runner registers these tools inside the Tool Registry.
+
+Only registered tools are available to the language model.
+
+---
+
+## Tool Registry
+
+The Tool Registry stores every available tool.
+
+Its responsibilities include:
+
+- registering tools
+- preventing duplicates
+- exposing tool definitions
+- looking up tools during execution
+
+Conceptually:
+
+```text
+Tool Registry
+
+├── weather
+├── search
+├── calculator
+└── database
+```
+
+The Runner never executes tools directly.
+
+It asks the Tool Registry to locate them first.
+
+---
+
+## Tool definitions
+
+The language model does not receive executable functions.
+
+Instead, it receives metadata.
+
+A tool definition contains:
+
+- name
+- description
+- input schema
+
+Example:
+
+```ts
+{
+  name: "weather",
+
+  description:
+    "Get weather information",
+
+  parameters: {
+    city: "string"
+  }
+}
+```
+
+The provider converts these definitions into the format expected by the underlying model.
+
+---
+
+## Tool execution
+
+When a model requests a tool:
+
+```text
+Model
+
+↓
+
+tool_call
+
+↓
+
+Runner
+
+↓
+
+ToolExecutor
+
+↓
+
+Execute Function
+
+↓
+
+ToolResult
+
+↓
+
+Runner
+
+↓
+
+Model
+```
+
+The Tool Executor is responsible for:
+
+- validating the request
+- finding the tool
+- executing the handler
+- returning the result
+
+---
+
+## Tool results
+
+After execution, the runtime creates a Tool Result.
+
+Conceptually:
+
+```ts
+{
+  toolCallId: "...",
+
+  name: "weather",
+
+  output: {
+    city: "Pune",
+    temperature: 29,
+  }
+}
+```
+
+The result is appended to the conversation before the next provider request.
+
+This allows the language model to continue reasoning using real-world data.
+
+---
+
+## Multiple tool calls
+
+An agent may execute several tools during one run.
+
+Example:
+
+```
+User
+
+↓
+
+Search Tool
+
+↓
+
+Weather Tool
+
+↓
+
+Maps Tool
+
+↓
+
+Final Answer
+```
+
+The Runner continues executing until the provider returns a final text response.
+
+---
+
+## Error handling
+
+Tool execution can fail.
+
+Examples include:
+
+- network failures
+- invalid input
+- missing permissions
+- unexpected exceptions
+
+The runtime captures these failures and converts them into a normalized error.
+
+```ts
+{
+  success: false,
+
+  error: {
+    type: "tool_error",
+
+    message: "...",
+  },
+}
+```
+
+This keeps error handling consistent across all tools.
+
+---
+
+## Runtime events
+
+Every important tool action emits an event.
+
+```
+tool.called
+
+↓
+
+tool.completed
+```
+
+These events make debugging significantly easier.
+
+For example:
+
+```ts
+runner.events.on('tool.called', (event) => {
+  console.log(event.toolName);
+});
+```
+
+Applications can observe tool execution without modifying the runtime.
+
+---
+
+## Design principles
+
+Agni's tool system follows a few simple principles.
+
+### Declarative
+
+Agents declare available tools.
+
+The runtime manages execution.
+
+---
+
+### Provider-independent
+
+The runtime owns tool execution.
+
+Providers only describe available tools to the model.
+
+---
+
+### Observable
+
+Every tool execution publishes runtime events.
+
+Nothing happens silently.
+
+---
+
+### Extensible
+
+Tools are ordinary TypeScript functions.
+
+The runtime handles orchestration.
+
+Your business logic stays independent from the runtime itself.
+
+---
+
+## Next steps
+
+Continue exploring the architecture:
+
+- **Memory** — Learn how conversations persist across runs.
+- **Guardrails** — Understand validation before and after execution.
+- **Streaming** — Explore runtime events.
+- **Tracing** — Learn how Agni exposes execution for observability.
