@@ -1,4 +1,306 @@
 ---
-title: Page Title
-description: Short description.
+title: Custom Providers
+description: Connect Agni to any language model by implementing the ModelProvider interface.
 ---
+
+# Build a Custom Provider
+
+Providers are responsible for communicating with language models.
+
+The Agni runtime never talks directly to an AI model.
+
+Instead, every request flows through a provider.
+
+```
+Runner
+   │
+   ▼
+Provider
+   │
+   ▼
+Language Model
+```
+
+This abstraction allows you to switch providers without changing your agent or runtime logic.
+
+---
+
+## When should you build a custom provider?
+
+You should implement your own provider when:
+
+- You're using an unsupported model
+- You have an internal AI gateway
+- You want custom authentication
+- You need request logging
+- You want retries or caching
+- You're connecting to a self-hosted model
+
+Everything above can be implemented without changing Agni's runtime.
+
+---
+
+## The Provider Interface
+
+Every provider implements the `ModelProvider` interface.
+
+```ts
+import type {
+  ModelProvider,
+  ModelRequest,
+  ModelResponse,
+} from "agni-agent-sdk";
+
+export class MyProvider implements ModelProvider {
+  readonly info = {
+    name: "my-provider",
+    model: "my-model",
+  };
+
+  async generate(
+    request: ModelRequest
+  ): Promise<ModelResponse> {
+    // Call your model
+
+    return {
+      type: "text",
+      content: "Hello from my provider!",
+    };
+  }
+}
+```
+
+The runtime only knows about this interface.
+
+Everything else is provider-specific.
+
+---
+
+## Provider Information
+
+Each provider exposes basic metadata.
+
+```ts
+readonly info = {
+  name: "gemini",
+  model: "gemini-2.5-flash",
+};
+```
+
+Agni uses this information for:
+
+- Runtime events
+- Tracing
+- Debugging
+- Logging
+
+---
+
+## Receive Requests
+
+The runtime sends a normalized request to the provider.
+
+```ts
+async generate(
+  request: ModelRequest
+): Promise<ModelResponse> {
+  console.log(request.messages);
+
+  console.log(request.tools);
+
+  console.log(request.providerOptions);
+
+  return {
+    type: "text",
+    content: "Done",
+  };
+}
+```
+
+A request contains:
+
+- Conversation history
+- Available tools
+- Provider-specific options
+- Runtime configuration
+
+---
+
+## Return Text
+
+A normal completion returns a text response.
+
+```ts
+return {
+  type: "text",
+
+  content: "Hello from Agni!",
+};
+```
+
+The runtime immediately finishes the execution.
+
+---
+
+## Return Tool Calls
+
+If your model requests tool execution, return a tool call response.
+
+```ts
+return {
+  type: "tool_call",
+
+  toolCalls: [
+    {
+      id: "call_1",
+
+      name: "get_weather",
+
+      arguments: {
+        city: "Pune",
+      },
+    },
+  ],
+};
+```
+
+Agni will:
+
+1. Execute the requested tool
+2. Append the tool result
+3. Call the provider again
+4. Return the final answer
+
+This entire loop is handled by the runtime.
+
+---
+
+## Mapping Provider Responses
+
+Different providers return different response formats.
+
+Your provider is responsible for converting those responses into Agni's common format.
+
+For example:
+
+Provider response
+
+```json
+{
+  "text": "Hello"
+}
+```
+
+Becomes
+
+```ts
+{
+  type: "text",
+
+  content: "Hello",
+}
+```
+
+Likewise, provider-specific tool call formats should be mapped into Agni's `ToolCall` structure.
+
+This normalization keeps the runtime provider-agnostic.
+
+---
+
+## Provider Architecture
+
+```text
+Runner
+
+   │
+
+   ▼
+
+ModelRequest
+
+   │
+
+   ▼
+
+Custom Provider
+
+   │
+
+   ▼
+
+External AI Model
+
+   │
+
+   ▼
+
+Raw Response
+
+   │
+
+   ▼
+
+ModelResponse
+
+   │
+
+   ▼
+
+Runner
+```
+
+The runtime never depends on provider-specific APIs.
+
+Only the provider implementation changes.
+
+---
+
+## Best Practices
+
+Keep providers focused on communication.
+
+A provider should:
+
+- Build requests
+- Call the model
+- Parse responses
+- Normalize outputs
+
+A provider should not:
+
+- Execute tools
+- Manage runtime state
+- Handle agent loops
+- Store memory
+
+Those responsibilities belong to the Agni runtime.
+
+---
+
+Keep providers stateless.
+
+Each request should be independent.
+
+Avoid storing conversation state inside the provider.
+
+The runtime already manages conversation history.
+
+---
+
+Normalize everything.
+
+Every provider should produce the same `ModelResponse` regardless of which model is used.
+
+This allows agents to switch providers without changing application code.
+
+---
+
+## Next Steps
+
+→ Multi-Agent Guide
+
+Learn how multiple agents collaborate in a single workflow.
+
+→ API Reference
+
+Explore the complete Provider API in detail.

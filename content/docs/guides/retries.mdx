@@ -1,4 +1,135 @@
 ---
-title: Page Title
-description: Short description.
+title: Retries
+description: Handle transient failures when communicating with AI providers and external services.
 ---
+
+# Retries
+
+AI applications interact with external systems that can occasionally fail.
+
+Examples include:
+
+- Network interruptions
+- Provider rate limits
+- Temporary server errors
+- Tool execution failures
+
+Retrying failed operations improves reliability without requiring user intervention.
+
+---
+
+## When should you retry?
+
+Retries are useful for **temporary failures**.
+
+Examples include:
+
+- HTTP 429 (Rate Limited)
+- HTTP 500–503
+- Network timeouts
+- Connection resets
+
+Avoid retrying permanent failures such as:
+
+- Invalid API keys
+- Authentication errors
+- Invalid tool parameters
+- Validation failures
+
+---
+
+## Retry provider requests
+
+Agni includes a retry utility that can be used around provider calls.
+
+```ts
+import { retry } from "agni-sdk";
+
+const response = await retry(
+  () => provider.generate(request),
+  {
+    attempts: 3,
+    delay: 1000,
+  }
+);
+```
+
+The runtime retries the operation until it succeeds or the maximum number of attempts is reached.
+
+---
+
+## Retry tool execution
+
+External APIs are also good candidates for retries.
+
+```ts
+const weatherTool = tool({
+  name: "weather",
+
+  async execute(input) {
+    return retry(
+      async () => {
+        return fetchWeather(input.city);
+      },
+      {
+        attempts: 3,
+        delay: 1000,
+      }
+    );
+  },
+});
+```
+
+Only retry operations that are safe to execute multiple times.
+
+---
+
+## Exponential backoff
+
+Waiting the same amount of time between retries can overload an already struggling service.
+
+A better approach is exponential backoff.
+
+```
+Attempt 1 → 1 second
+
+Attempt 2 → 2 seconds
+
+Attempt 3 → 4 seconds
+
+Attempt 4 → 8 seconds
+```
+
+This gives external services time to recover.
+
+---
+
+## Retry strategy
+
+A good retry strategy usually includes:
+
+- Maximum retry attempts
+- Increasing delay between retries
+- Timeout per request
+- Logging each retry
+- Giving up after repeated failures
+
+---
+
+## Best practices
+
+- Retry only transient failures.
+- Never retry authentication errors.
+- Use exponential backoff instead of constant delays.
+- Set a maximum retry count.
+- Log every retry attempt for debugging.
+- Combine retries with timeouts.
+
+---
+
+## Next steps
+
+After learning retries, continue with:
+
+- → Production
+- → API Reference

@@ -1,4 +1,290 @@
 ---
-title: Page Title
-description: Short description.
+title: Multi-Agent Workflows
+description: Build systems where multiple specialized agents collaborate to solve complex tasks.
 ---
+
+# Build Multi-Agent Workflows
+
+Large AI applications rarely rely on a single agent.
+
+Instead, they use multiple specialized agents that collaborate to solve a problem.
+
+Rather than creating one agent that does everything, you build several focused agents with clear responsibilities.
+
+---
+
+## Why Multiple Agents?
+
+A single agent often becomes difficult to maintain as its responsibilities grow.
+
+Splitting work across specialized agents improves:
+
+- Accuracy
+- Maintainability
+- Prompt quality
+- Tool organization
+- Debugging
+
+Each agent should solve one problem well.
+
+---
+
+## A Typical Workflow
+
+```
+              User
+
+                │
+
+                ▼
+
+         Orchestrator Agent
+
+        ┌────────┴────────┐
+
+        ▼                 ▼
+
+ Research Agent     Coding Agent
+
+        │                 │
+
+        └────────┬────────┘
+
+                 ▼
+
+          Review Agent
+
+                 │
+
+                 ▼
+
+           Final Response
+```
+
+Every agent has a clear responsibility.
+
+The orchestrator coordinates the workflow.
+
+---
+
+## Create Specialized Agents
+
+For example:
+
+```ts
+const researcher = new Agent({
+  name: "researcher",
+
+  instructions:
+    "Gather information and summarize findings.",
+
+  provider,
+});
+
+const writer = new Agent({
+  name: "writer",
+
+  instructions:
+    "Write clear documentation using the research.",
+
+  provider,
+});
+
+const reviewer = new Agent({
+  name: "reviewer",
+
+  instructions:
+    "Review the final document for accuracy.",
+
+  provider,
+});
+```
+
+Each agent receives its own instructions.
+
+No agent needs to understand the entire system.
+
+---
+
+## Execute Agents Sequentially
+
+One common pattern is a sequential workflow.
+
+```text
+Research
+
+   │
+
+   ▼
+
+Write
+
+   │
+
+   ▼
+
+Review
+
+   │
+
+   ▼
+
+Final Answer
+```
+
+The output of one agent becomes the input for the next.
+
+This approach is easy to understand and debug.
+
+---
+
+## Fan-Out Workflows
+
+Sometimes multiple agents can work in parallel.
+
+```
+             User
+
+               │
+
+               ▼
+
+         Planner Agent
+
+      ┌──────┼──────┐
+
+      ▼      ▼      ▼
+
+ Search   Database   APIs
+
+      └──────┼──────┘
+
+             ▼
+
+      Synthesis Agent
+```
+
+Parallel execution reduces latency when tasks are independent.
+
+---
+
+## Choosing Agent Responsibilities
+
+Good agents have narrow responsibilities.
+
+Examples:
+
+- Research
+- Writing
+- Coding
+- Reviewing
+- Planning
+- Summarization
+- Data extraction
+- Translation
+
+Avoid creating one "super agent" that performs every task.
+
+---
+
+## Share Context Carefully
+
+Not every agent needs the complete conversation history.
+
+Instead, pass only the information required for the current task.
+
+Smaller context windows generally improve:
+
+- Cost
+- Speed
+- Response quality
+
+---
+
+## Reuse Providers
+
+Multiple agents can share the same provider.
+
+```ts
+const provider = new GeminiProvider({
+  apiKey: process.env.GEMINI_API_KEY!,
+});
+
+const researcher = new Agent({
+  provider,
+  ...
+});
+
+const reviewer = new Agent({
+  provider,
+  ...
+});
+```
+
+You don't need one provider instance per agent.
+
+---
+
+## Use Different Models
+
+Different agents may require different models.
+
+For example:
+
+| Agent | Model |
+|--------|-------|
+| Planner | Fast model |
+| Research | Large reasoning model |
+| Reviewer | High-quality model |
+
+Agni's provider abstraction makes this easy.
+
+---
+
+## Debugging Multi-Agent Systems
+
+Because every agent execution goes through the Runner, you can observe:
+
+- Agent start
+- Provider requests
+- Tool execution
+- Runtime events
+- Final outputs
+
+This makes complex workflows easier to understand than manually chaining API calls.
+
+---
+
+## Current Status
+
+Agni currently encourages orchestration at the application level.
+
+A future release will introduce built-in handoffs and orchestration primitives for managing multi-agent workflows more naturally.
+
+---
+
+## Best Practices
+
+Design each agent around one responsibility.
+
+Keep prompts small and focused.
+
+Pass only the context an agent actually needs.
+
+Reuse tools where appropriate.
+
+Log and trace every agent execution.
+
+Avoid unnecessary communication between agents.
+
+---
+
+## Next Steps
+
+→ Production Guide
+
+Learn how to build reliable agents for real-world applications.
+
+→ Examples
+
+Explore complete multi-agent implementations.

@@ -1,4 +1,309 @@
 ---
-title: Page Title
-description: Short description.
+title: Custom Tools
+description: Extend your agents with custom tools that interact with external systems and perform real-world tasks.
 ---
+
+# Build Custom Tools
+
+Tools allow an agent to interact with the outside world.
+
+Instead of only generating text, an agent can:
+
+- Query databases
+- Call REST APIs
+- Read files
+- Search the web
+- Execute business logic
+- Perform calculations
+
+In Agni, tools are regular TypeScript functions with a schema describing their inputs.
+
+---
+
+## When should you use a tool?
+
+Use a tool whenever the model needs information or capabilities that it doesn't already have.
+
+Common examples include:
+
+- Current weather
+- Database queries
+- User information
+- Payment APIs
+- Email services
+- Search systems
+
+Think of a tool as an action your agent can perform.
+
+---
+
+## Create a Tool
+
+A tool consists of three parts:
+
+- Name
+- Description
+- Parameters
+- Execute function
+
+```ts
+import { tool } from "agni-agent-sdk";
+import { z } from "zod";
+
+export const weatherTool = tool({
+  name: "get_weather",
+
+  description: "Get the current weather for a city.",
+
+  parameters: z.object({
+    city: z.string(),
+  }),
+
+  async execute({ city }) {
+    return {
+      city,
+      temperature: 29,
+      condition: "Sunny",
+    };
+  },
+});
+```
+
+The description is important because the language model uses it to decide when the tool should be called.
+
+---
+
+## Register the Tool
+
+Pass your tool when creating an agent.
+
+```ts
+const agent = new Agent({
+  name: "weather-agent",
+
+  instructions:
+    "You are a helpful weather assistant.",
+
+  provider,
+
+  tools: [weatherTool],
+});
+```
+
+Once registered, Agni automatically exposes the tool to the provider during runtime.
+
+---
+
+## Run the Agent
+
+Now execute the agent normally.
+
+```ts
+const runner = new Runner();
+
+const result = await runner.run(
+  agent,
+  "What's the weather in Pune?",
+  {
+    context: {},
+  }
+);
+
+console.log(result.output);
+```
+
+If the provider determines the tool is required:
+
+1. The model requests the tool.
+2. Agni validates the arguments.
+3. The tool executes.
+4. The result is sent back to the model.
+5. The model produces the final response.
+
+This entire process is handled automatically by the runtime.
+
+---
+
+## Tool Execution Flow
+
+```text
+User
+
+  │
+
+  ▼
+
+Agent
+
+  │
+
+  ▼
+
+Runner
+
+  │
+
+  ▼
+
+Provider
+
+  │
+
+  ▼
+
+Tool Requested
+
+  │
+
+  ▼
+
+Tool Executor
+
+  │
+
+  ▼
+
+Tool Result
+
+  │
+
+  ▼
+
+Provider
+
+  │
+
+  ▼
+
+Final Answer
+```
+
+---
+
+## Access Runtime Context
+
+Every tool receives a `RunContext`.
+
+Use it to access application-specific data during execution.
+
+```ts
+async execute(args, context) {
+  console.log(context.runId);
+
+  console.log(context.turn);
+
+  console.log(context.context);
+
+  return {
+    success: true,
+  };
+}
+```
+
+This makes it easy to access authentication, database connections, user information, or request-scoped state.
+
+---
+
+## Return Values
+
+A tool can return any JSON-serializable object.
+
+```ts
+return {
+  city: "Pune",
+  temperature: 29,
+  condition: "Sunny",
+};
+```
+
+The runtime sends this result back to the language model so it can generate the final response.
+
+---
+
+## Error Handling
+
+Throw an error when a tool cannot complete successfully.
+
+```ts
+async execute({ city }) {
+  throw new Error("Weather service unavailable.");
+}
+```
+
+Agni captures the error and returns a normalized tool error to the runtime.
+
+---
+
+## Best Practices
+
+Keep tools focused on a single responsibility.
+
+✔ One tool → One job
+
+Good examples:
+
+- Get weather
+- Send email
+- Search documents
+- Fetch user profile
+
+Avoid building one tool that performs many unrelated actions.
+
+---
+
+Keep descriptions clear.
+
+The model decides whether to call a tool based largely on its description.
+
+Prefer:
+
+```text
+Get the current weather for a city.
+```
+
+Instead of:
+
+```text
+Weather tool.
+```
+
+---
+
+Validate every input.
+
+Use schemas to ensure invalid arguments never reach your business logic.
+
+---
+
+Return structured data.
+
+Instead of:
+
+```ts
+return "It's hot today.";
+```
+
+Prefer:
+
+```ts
+return {
+  temperature: 29,
+  condition: "Sunny",
+};
+```
+
+Structured outputs are easier for language models to reason about.
+
+---
+
+## Next Steps
+
+Continue exploring Agni.
+
+→ Custom Providers
+
+Learn how to connect Agni to your own language model provider.
+
+→ Production Guide
+
+Learn best practices for building reliable AI agents.

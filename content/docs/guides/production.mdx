@@ -1,4 +1,243 @@
 ---
-title: Page Title
-description: Short description.
+title: Production
+description: Best practices for building reliable production AI agents with Agni Agent SDK.
 ---
+
+# Production
+
+Moving from a prototype to production requires more than just generating responses.
+
+Reliable AI systems need predictable execution, visibility, and clear boundaries.
+
+This guide covers practical recommendations when deploying Agni Agent SDK in real applications.
+
+---
+
+## Keep agents focused
+
+Each agent should have a single responsibility.
+
+Good examples include:
+
+- Customer Support Agent
+- Documentation Assistant
+- Research Agent
+- Weather Agent
+
+Avoid creating one agent that tries to solve every problem.
+
+Smaller agents are easier to maintain, test, and improve.
+
+---
+
+## Write clear instructions
+
+Your system prompt is the behavior contract for the agent.
+
+Prefer instructions like:
+
+```text
+You are a customer support assistant.
+
+Answer only questions related to customer accounts.
+
+If you don't know the answer, say you don't know.
+```
+
+Avoid vague prompts such as:
+
+```text
+Be helpful.
+```
+
+The more specific the instructions, the more predictable the behavior.
+
+---
+
+## Limit tool access
+
+Only register tools that the agent actually needs.
+
+Instead of exposing ten tools:
+
+```ts
+tools: [
+  weatherTool,
+  emailTool,
+  databaseTool,
+  paymentTool,
+  searchTool,
+]
+```
+
+Prefer:
+
+```ts
+tools: [
+  weatherTool,
+]
+```
+
+Smaller tool sets reduce unnecessary tool calls and improve reliability.
+
+---
+
+## Handle failures gracefully
+
+Always check the execution result.
+
+```ts
+const result = await runner.run(agent, input, {
+  context: {},
+});
+
+if (!result.success) {
+  console.error(result.error);
+
+  return;
+}
+
+console.log(result.output);
+```
+
+Never assume every run succeeds.
+
+---
+
+## Monitor execution
+
+Subscribe to runtime events to understand what the agent is doing.
+
+```ts
+runner.events.on("agent.started", console.log);
+
+runner.events.on("provider.request", console.log);
+
+runner.events.on("tool.called", console.log);
+
+runner.events.on("agent.completed", console.log);
+```
+
+These events make debugging significantly easier.
+
+---
+
+## Keep business logic outside the agent
+
+The agent should decide **what** to do.
+
+Your application should decide **how** to do it.
+
+Good:
+
+```text
+Agent
+↓
+
+Call Weather Tool
+
+↓
+
+Application returns weather data
+```
+
+Avoid embedding database logic, authentication, or application state directly inside prompts.
+
+---
+
+## Use structured tools
+
+Instead of asking the model to generate data manually:
+
+```text
+Find today's weather.
+```
+
+Prefer:
+
+```text
+Use the weather tool to retrieve today's weather.
+```
+
+Structured tool execution is more reliable than relying entirely on model reasoning.
+
+---
+
+## Test with real conversations
+
+Before deploying:
+
+- Test happy paths
+- Test invalid inputs
+- Test unknown questions
+- Test tool failures
+- Test long conversations
+
+Production failures usually come from unexpected user behavior, not expected inputs.
+
+---
+
+## Observe every run
+
+Each execution has a unique run ID.
+
+```ts
+const result = await runner.run(agent, input, {
+  context: {},
+});
+
+console.log(result.metadata.runId);
+```
+
+Run IDs make it easier to trace logs and investigate failures.
+
+---
+
+## Scale with specialized agents
+
+As your application grows, avoid making one large agent.
+
+Instead:
+
+```text
+Support Agent
+
+↓
+
+Billing Agent
+
+↓
+
+Knowledge Agent
+
+↓
+
+Research Agent
+```
+
+Small specialized agents are easier to reason about than one general-purpose agent.
+
+---
+
+## Production checklist
+
+Before shipping your application:
+
+- ✅ Keep prompts focused
+- ✅ Register only required tools
+- ✅ Handle execution failures
+- ✅ Monitor runtime events
+- ✅ Test tool failures
+- ✅ Keep business logic outside prompts
+- ✅ Observe every run
+- ✅ Split large workflows into specialized agents
+
+---
+
+## Next steps
+
+Continue exploring:
+
+- → Examples
+- → API Reference
+- → Concepts (coming soon)

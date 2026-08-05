@@ -1,4 +1,4 @@
 {
   "title": "Guides",
-  "pages": ["custom-tools", "custom-provider", "adding-memory", "retries", "production"]
+  "pages": ["custom-tools", "custom-provider", "multi-agent", "retries", "production"]
 }
