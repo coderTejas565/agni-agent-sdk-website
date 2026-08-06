@@ -9,7 +9,6 @@ import { Footer } from '@/components/sections/footer';
 export default function Home() {
   return (
     <>
-    
       <Navbar />
 
       <main>

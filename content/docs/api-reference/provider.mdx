@@ -20,8 +20,8 @@ Agni separates the runtime from model providers, allowing agents to run with dif
 ## Import
 
 ```ts
-import type { Provider } from "agni-sdk";
-````
+import type { Provider } from 'agni-sdk';
+```
 
 ---
 
@@ -81,14 +81,9 @@ Every provider implements the `Provider` interface.
 
 ```ts
 interface Provider {
-
   name: string;
 
-
-  generate(
-    request: ProviderRequest
-  ): Promise<ProviderResponse>;
-
+  generate(request: ProviderRequest): Promise<ProviderResponse>;
 }
 ```
 
@@ -101,19 +96,19 @@ interface Provider {
 Identifier for the provider.
 
 ```ts
-provider.name
+provider.name;
 ```
 
 **Type**
 
 ```ts
-string
+string;
 ```
 
 Example:
 
 ```ts
-"gemini"
+'gemini';
 ```
 
 ---
@@ -125,7 +120,7 @@ Example:
 Generates a response from the configured model.
 
 ```ts
-provider.generate(request)
+provider.generate(request);
 ```
 
 ---
@@ -137,7 +132,7 @@ provider.generate(request)
 The normalized model request created by Agni runtime.
 
 ```ts
-ProviderRequest
+ProviderRequest;
 ```
 
 Contains:
@@ -156,7 +151,7 @@ Contains:
 Returns a normalized provider response.
 
 ```ts
-Promise<ProviderResponse>
+Promise<ProviderResponse>;
 ```
 
 Example:
@@ -179,18 +174,11 @@ Agni includes provider adapters for popular AI platforms.
 ## Gemini
 
 ```ts
-import {
-  GeminiProvider
-} from "agni-sdk";
+import { GeminiProvider } from 'agni-sdk';
 
-
-const provider =
-  new GeminiProvider({
-
-    apiKey:
-      process.env.GEMINI_API_KEY!,
-
-  });
+const provider = new GeminiProvider({
+  apiKey: process.env.GEMINI_API_KEY!,
+});
 ```
 
 ---
@@ -198,18 +186,11 @@ const provider =
 ## OpenAI
 
 ```ts
-import {
-  OpenAIProvider
-} from "agni-sdk";
+import { OpenAIProvider } from 'agni-sdk';
 
-
-const provider =
-  new OpenAIProvider({
-
-    apiKey:
-      process.env.OPENAI_API_KEY!,
-
-  });
+const provider = new OpenAIProvider({
+  apiKey: process.env.OPENAI_API_KEY!,
+});
 ```
 
 ---
@@ -217,18 +198,11 @@ const provider =
 ## Anthropic
 
 ```ts
-import {
-  AnthropicProvider
-} from "agni-sdk";
+import { AnthropicProvider } from 'agni-sdk';
 
-
-const provider =
-  new AnthropicProvider({
-
-    apiKey:
-      process.env.ANTHROPIC_API_KEY!,
-
-  });
+const provider = new AnthropicProvider({
+  apiKey: process.env.ANTHROPIC_API_KEY!,
+});
 ```
 
 ---
@@ -238,33 +212,19 @@ const provider =
 Providers are passed into an Agent.
 
 ```ts
-import {
-  Agent,
-  GeminiProvider,
-} from "agni-sdk";
+import { Agent, GeminiProvider } from 'agni-sdk';
 
+const provider = new GeminiProvider({
+  apiKey: process.env.GEMINI_API_KEY!,
+});
 
-const provider =
-  new GeminiProvider({
+const agent = new Agent({
+  name: 'assistant',
 
-    apiKey:
-      process.env.GEMINI_API_KEY!,
+  instructions: 'You are helpful.',
 
-  });
-
-
-const agent =
-  new Agent({
-
-    name:
-      "assistant",
-
-    instructions:
-      "You are helpful.",
-
-    provider,
-
-  });
+  provider,
+});
 ```
 
 ---
@@ -318,38 +278,20 @@ You can implement your own provider.
 Example:
 
 ```ts
-import type {
-  Provider
-} from "agni-sdk";
+import type { Provider } from 'agni-sdk';
 
-
-class CustomProvider
-implements Provider {
-
-
-  name =
-    "custom-provider";
-
+class CustomProvider implements Provider {
+  name = 'custom-provider';
 
   async generate(request) {
-
-
-    const response =
-      await myModel.generate(request);
-
+    const response = await myModel.generate(request);
 
     return {
+      type: 'text',
 
-      type:
-        "text",
-
-      content:
-        response.text,
-
+      content: response.text,
     };
-
   }
-
 }
 ```
 
@@ -362,23 +304,17 @@ Agents can switch providers without changing application logic.
 Example:
 
 ```ts
-const agent =
-  new Agent({
+const agent = new Agent({
+  name: 'assistant',
 
-    name:
-      "assistant",
-
-    provider:
-      geminiProvider,
-
-  });
+  provider: geminiProvider,
+});
 ```
 
 Change only:
 
 ```ts
-provider:
-  openAIProvider
+provider: openAIProvider;
 ```
 
 The rest of the application remains unchanged.
@@ -401,22 +337,12 @@ Common provider errors:
 Example:
 
 ```ts
-const result =
-  await runner.run(
-    agent,
-    input,
-    {
-      context: {},
-    }
-);
-
+const result = await runner.run(agent, input, {
+  context: {},
+});
 
 if (!result.success) {
-
-  console.error(
-    result.error
-  );
-
+  console.error(result.error);
 }
 ```
 
@@ -424,7 +350,7 @@ if (!result.success) {
 
 # Related
 
-* [`Agent`](/docs/api-reference/agent)
-* [`Runner`](/docs/api-reference/runner)
-* [`Tool`](/docs/api-reference/tool)
-* [`Custom Provider Guide`](/docs/guides/custom-provider)
+- [`Agent`](/docs/api-reference/agent)
+- [`Runner`](/docs/api-reference/runner)
+- [`Tool`](/docs/api-reference/tool)
+- [`Custom Provider Guide`](/docs/guides/custom-provider)

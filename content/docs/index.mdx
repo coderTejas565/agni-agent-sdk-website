@@ -50,36 +50,27 @@ Connects Agni to an AI model.
 Executes the complete runtime lifecycle.
 
 ```ts
-import "dotenv/config";
+import 'dotenv/config';
 
-import {
-  Agent,
-  Runner,
-  GeminiProvider,
-} from "agni-agent-sdk";
+import { Agent, Runner, GeminiProvider } from 'agni-agent-sdk';
 
 const provider = new GeminiProvider({
   apiKey: process.env.GEMINI_API_KEY!,
 });
 
 const agent = new Agent({
-  name: "assistant",
+  name: 'assistant',
 
-  instructions:
-    "You are a helpful AI assistant.",
+  instructions: 'You are a helpful AI assistant.',
 
   provider,
 });
 
 const runner = new Runner();
 
-const result = await runner.run(
-  agent,
-  "Explain how AI agents work.",
-  {
-    context: {},
-  }
-);
+const result = await runner.run(agent, 'Explain how AI agents work.', {
+  context: {},
+});
 
 if (result.success) {
   console.log(result.output);
@@ -219,6 +210,3 @@ Agni is built around a small set of composable primitives.
 - Predictable agent behavior
 
 Whether you're building a simple assistant or a production-grade multi-agent system, Agni provides the runtime not the magic.
-
-
-

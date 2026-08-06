@@ -72,18 +72,14 @@ research-agent/
 
 ```ts
 const agent = new Agent({
-  name: "research-agent",
+  name: 'research-agent',
 
   instructions:
     "Research the user's question using the available tools before answering.",
 
   provider,
 
-  tools: [
-    webSearchTool,
-    documentationTool,
-    databaseTool,
-  ],
+  tools: [webSearchTool, documentationTool, databaseTool],
 });
 ```
 
@@ -147,13 +143,13 @@ Different tools solve different problems.
 
 For example:
 
-| Tool | Responsibility |
-|------|----------------|
-| Web Search | Recent information |
-| Documentation | Product knowledge |
-| Database | Structured business data |
-| Weather | Live weather information |
-| Email | Send notifications |
+| Tool          | Responsibility           |
+| ------------- | ------------------------ |
+| Web Search    | Recent information       |
+| Documentation | Product knowledge        |
+| Database      | Structured business data |
+| Weather       | Live weather information |
+| Email         | Send notifications       |
 
 Instead of creating one large tool, divide responsibilities into smaller, focused tools.
 

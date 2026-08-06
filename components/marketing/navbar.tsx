@@ -42,9 +42,19 @@ export function Navbar() {
         }}
       >
         {/* Logo */}
-        <Link href="/" aria-label="Agni SDK — home" className="group flex items-center gap-3">
+        <Link
+          href="/"
+          aria-label="Agni SDK — home"
+          className="group flex items-center gap-3"
+        >
           <div className="relative flex h-9 w-9 items-center justify-center rounded-lg transition-colors duration-300 group-hover:bg-[#FF7A00]/5">
-            <svg width="22" height="22" viewBox="0 0 100 100" role="img" aria-hidden="true">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 100 100"
+              role="img"
+              aria-hidden="true"
+            >
               <path
                 d="M38 25 L20 50 L38 75"
                 fill="none"

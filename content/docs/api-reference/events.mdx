@@ -27,9 +27,7 @@ Use events to build:
 ## Import
 
 ```ts
-import type {
-  AgentEvent
-} from "agni-sdk";
+import type { AgentEvent } from 'agni-sdk';
 ```
 
 ---
@@ -95,19 +93,12 @@ Events are available from the Runner.
 ```ts
 const runner = new Runner();
 
-
 runner.events.on(
-
-  "tool.called",
+  'tool.called',
 
   (event) => {
-
-    console.log(
-      event.toolName
-    );
-
-  }
-
+    console.log(event.toolName);
+  },
 );
 ```
 
@@ -117,15 +108,15 @@ runner.events.on(
 
 Agni currently supports the following runtime events.
 
-| Event | Description |
-|---|---|
-| `agent.started` | Agent execution started |
-| `agent.completed` | Agent execution finished |
-| `turn.started` | New execution turn started |
-| `provider.request` | Request sent to model provider |
-| `provider.response` | Provider returned response |
-| `tool.called` | Agent requested a tool |
-| `tool.completed` | Tool execution finished |
+| Event               | Description                    |
+| ------------------- | ------------------------------ |
+| `agent.started`     | Agent execution started        |
+| `agent.completed`   | Agent execution finished       |
+| `turn.started`      | New execution turn started     |
+| `provider.request`  | Request sent to model provider |
+| `provider.response` | Provider returned response     |
+| `tool.called`       | Agent requested a tool         |
+| `tool.completed`    | Tool execution finished        |
 
 ---
 
@@ -307,23 +298,15 @@ Example:
 
 ```ts
 runner.events.on(
-
-  "agent.completed",
+  'agent.completed',
 
   (event) => {
-
     analytics.track({
+      name: 'agent_completed',
 
-      name:
-        "agent_completed",
-
-      runId:
-        event.runId,
-
+      runId: event.runId,
     });
-
-  }
-
+  },
 );
 ```
 
@@ -349,18 +332,11 @@ Example:
 
 ```ts
 runner.events.on(
-
-  "provider.request",
+  'provider.request',
 
   (event) => {
-
-    console.log(
-      "Calling provider:",
-      event.provider
-    );
-
-  }
-
+    console.log('Calling provider:', event.provider);
+  },
 );
 ```
 

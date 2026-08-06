@@ -73,21 +73,20 @@ The retrieval tool is responsible for searching your knowledge base.
 
 ```ts
 const retrieveTool = {
-  name: "retrieve_documents",
+  name: 'retrieve_documents',
 
-  description:
-    "Searches the knowledge base for relevant information.",
+  description: 'Searches the knowledge base for relevant information.',
 
   parameters: {
-    type: "object",
+    type: 'object',
 
     properties: {
       query: {
-        type: "string",
+        type: 'string',
       },
     },
 
-    required: ["query"],
+    required: ['query'],
   },
 
   async execute({ query }) {
@@ -113,10 +112,9 @@ It might query:
 
 ```ts
 const agent = new Agent({
-  name: "rag-agent",
+  name: 'rag-agent',
 
-  instructions:
-    "Answer questions only using the retrieved context.",
+  instructions: 'Answer questions only using the retrieved context.',
 
   provider,
 

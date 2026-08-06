@@ -61,21 +61,13 @@ Only register tools that the agent actually needs.
 Instead of exposing ten tools:
 
 ```ts
-tools: [
-  weatherTool,
-  emailTool,
-  databaseTool,
-  paymentTool,
-  searchTool,
-]
+tools: [weatherTool, emailTool, databaseTool, paymentTool, searchTool];
 ```
 
 Prefer:
 
 ```ts
-tools: [
-  weatherTool,
-]
+tools: [weatherTool];
 ```
 
 Smaller tool sets reduce unnecessary tool calls and improve reliability.
@@ -109,13 +101,13 @@ Never assume every run succeeds.
 Subscribe to runtime events to understand what the agent is doing.
 
 ```ts
-runner.events.on("agent.started", console.log);
+runner.events.on('agent.started', console.log);
 
-runner.events.on("provider.request", console.log);
+runner.events.on('provider.request', console.log);
 
-runner.events.on("tool.called", console.log);
+runner.events.on('tool.called', console.log);
 
-runner.events.on("agent.completed", console.log);
+runner.events.on('agent.completed', console.log);
 ```
 
 These events make debugging significantly easier.

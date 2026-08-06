@@ -54,7 +54,7 @@ export function Footer() {
         </div>
 
         {/* Bottom */}
-        <div className="text-muted-foreground/60 mt-8 flex flex-col gap-2 border-t border-border/30 pt-6 text-xs sm:flex-row sm:items-center sm:justify-between">
+        <div className="text-muted-foreground/60 border-border/30 mt-8 flex flex-col gap-2 border-t pt-6 text-xs sm:flex-row sm:items-center sm:justify-between">
           <span>© {new Date().getFullYear()} Agni SDK.</span>
           <span>Open source — MIT</span>
         </div>

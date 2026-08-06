@@ -48,23 +48,18 @@ GEMINI_API_KEY=your_api_key
 ## Create the Agent
 
 ```ts
-import "dotenv/config";
+import 'dotenv/config';
 
-import {
-  Agent,
-  Runner,
-  GeminiProvider,
-} from "agni-sdk";
+import { Agent, Runner, GeminiProvider } from 'agni-sdk';
 
 const provider = new GeminiProvider({
   apiKey: process.env.GEMINI_API_KEY!,
 });
 
 const agent = new Agent({
-  name: "chat-agent",
+  name: 'chat-agent',
 
-  instructions:
-    "You are a friendly and helpful AI assistant.",
+  instructions: 'You are a friendly and helpful AI assistant.',
 
   provider,
 });
@@ -74,11 +69,11 @@ const runner = new Runner();
 const result = await runner.run(
   agent,
 
-  "Explain how JavaScript promises work.",
+  'Explain how JavaScript promises work.',
 
   {
     context: {},
-  }
+  },
 );
 
 if (result.success) {

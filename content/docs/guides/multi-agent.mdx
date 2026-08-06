@@ -73,28 +73,25 @@ For example:
 
 ```ts
 const researcher = new Agent({
-  name: "researcher",
+  name: 'researcher',
 
-  instructions:
-    "Gather information and summarize findings.",
+  instructions: 'Gather information and summarize findings.',
 
   provider,
 });
 
 const writer = new Agent({
-  name: "writer",
+  name: 'writer',
 
-  instructions:
-    "Write clear documentation using the research.",
+  instructions: 'Write clear documentation using the research.',
 
   provider,
 });
 
 const reviewer = new Agent({
-  name: "reviewer",
+  name: 'reviewer',
 
-  instructions:
-    "Review the final document for accuracy.",
+  instructions: 'Review the final document for accuracy.',
 
   provider,
 });
@@ -231,11 +228,11 @@ Different agents may require different models.
 
 For example:
 
-| Agent | Model |
-|--------|-------|
-| Planner | Fast model |
+| Agent    | Model                 |
+| -------- | --------------------- |
+| Planner  | Fast model            |
 | Research | Large reasoning model |
-| Reviewer | High-quality model |
+| Reviewer | High-quality model    |
 
 Agni's provider abstraction makes this easy.
 

@@ -31,14 +31,11 @@ const container: Variants = {
 
 export function Architecture() {
   return (
-    <section
-      id="architecture"
-      className="relative overflow-hidden py-20 lg:py-28"
-    >
+    <section id="architecture" className="relative overflow-hidden py-20 lg:py-28">
       {/* Premium ambient glow */}
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#FF7A00]/4 rounded-full blur-[160px]" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#FF7A00]/3 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 h-[800px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#FF7A00]/4 blur-[160px]" />
+        <div className="absolute bottom-0 left-0 h-[500px] w-[500px] rounded-full bg-[#FF7A00]/3 blur-[120px]" />
       </div>
 
       <motion.div
@@ -65,17 +62,14 @@ export function Architecture() {
           </h2>
 
           <p className="text-muted-foreground mx-auto mt-6 max-w-2xl text-lg leading-relaxed">
-            Agni SDK separates agent execution, providers, tools, and memory into
-            modular layers — designed for reliability, observability, and control.
+            Agni SDK separates agent execution, providers, tools, and memory into modular
+            layers — designed for reliability, observability, and control.
           </p>
         </motion.div>
 
         {/* ── Architecture Diagram ── */}
-        <motion.div
-          variants={fadeUp}
-          className="mx-auto mt-16 lg:mt-20 max-w-5xl"
-        >
-          <div className="relative border-border/60 bg-background/40 overflow-hidden rounded-2xl border p-8 backdrop-blur-sm shadow-[0_30px_100px_-40px_rgba(255,122,0,0.15)] sm:p-12 lg:p-14">
+        <motion.div variants={fadeUp} className="mx-auto mt-16 max-w-5xl lg:mt-20">
+          <div className="border-border/60 bg-background/40 relative overflow-hidden rounded-2xl border p-8 shadow-[0_30px_100px_-40px_rgba(255,122,0,0.15)] backdrop-blur-sm sm:p-12 lg:p-14">
             {/* Top layer: Application */}
             <ArchitectureNode>Application</ArchitectureNode>
 
@@ -213,9 +207,9 @@ function ArchitectureCard({
         {items.map((item) => (
           <div
             key={item}
-            className="text-muted-foreground flex items-center gap-3 font-mono text-xs transition-colors duration-200 group-hover:text-foreground/80"
+            className="text-muted-foreground group-hover:text-foreground/80 flex items-center gap-3 font-mono text-xs transition-colors duration-200"
           >
-            <span className="h-px w-4 bg-border/60 group-hover:bg-[#FF7A00]/30" />
+            <span className="bg-border/60 h-px w-4 group-hover:bg-[#FF7A00]/30" />
             {item}
           </div>
         ))}
@@ -228,7 +222,7 @@ function Connector() {
   return (
     <div className="relative mx-auto h-12 w-px overflow-hidden">
       {/* Gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-border/60 via-[#FF7A00]/20 to-border/60" />
+      <div className="from-border/60 to-border/60 absolute inset-0 bg-gradient-to-b via-[#FF7A00]/20" />
       {/* Animated pulse */}
       <motion.span
         animate={{

@@ -35,24 +35,24 @@ weather-agent/
 A tool is simply an object that exposes metadata and an `execute()` function.
 
 ```ts title="weather-agent.tool.ts"
-import type { Tool } from "agni-agent-sdk";
+import type { Tool } from 'agni-agent-sdk';
 
 export const weatherTool: Tool = {
-  name: "get_weather",
+  name: 'get_weather',
 
-  description: "Returns the weather for a city.",
+  description: 'Returns the weather for a city.',
 
   parameters: {
-    type: "object",
+    type: 'object',
 
     properties: {
       city: {
-        type: "string",
-        description: "City name",
+        type: 'string',
+        description: 'City name',
       },
     },
 
-    required: ["city"],
+    required: ['city'],
   },
 
   async execute({ city }) {
@@ -61,7 +61,7 @@ export const weatherTool: Tool = {
     return {
       city,
       temperature: 29,
-      condition: "Sunny",
+      condition: 'Sunny',
     };
   },
 };
@@ -78,25 +78,21 @@ Instead, it decides **when** to call a tool, and Agni executes it on the model's
 Register the tool when creating your agent.
 
 ```ts title="index.ts"
-import "dotenv/config";
+import 'dotenv/config';
 
-import {
-  Agent,
-  Runner,
-  GeminiProvider,
-} from "agni-agent-sdk";
+import { Agent, Runner, GeminiProvider } from 'agni-agent-sdk';
 
-import { weatherTool } from "./weather-agent.tool";
+import { weatherTool } from './weather-agent.tool';
 
 const provider = new GeminiProvider({
   apiKey: process.env.GEMINI_API_KEY!,
 });
 
 const agent = new Agent({
-  name: "weather-agent",
+  name: 'weather-agent',
 
   instructions:
-    "You are a helpful weather assistant. Always use the weather tool whenever a user asks about the weather.",
+    'You are a helpful weather assistant. Always use the weather tool whenever a user asks about the weather.',
 
   provider,
 
@@ -105,13 +101,9 @@ const agent = new Agent({
 
 const runner = new Runner();
 
-const result = await runner.run(
-  agent,
-  "What is the weather in Pune today?",
-  {
-    context: {},
-  }
-);
+const result = await runner.run(agent, 'What is the weather in Pune today?', {
+  context: {},
+});
 
 console.log(result);
 ```

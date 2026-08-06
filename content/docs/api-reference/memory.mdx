@@ -23,9 +23,7 @@ Agni treats memory as a separate runtime capability instead of coupling it direc
 ## Import
 
 ```ts
-import type {
-  Memory
-} from "agni-sdk";
+import type { Memory } from 'agni-sdk';
 ```
 
 ---
@@ -79,22 +77,11 @@ Every memory implementation follows the same contract.
 
 ```ts
 interface Memory {
+  get(sessionId: string): Promise<Message[]>;
 
-  get(
-    sessionId: string
-  ): Promise<Message[]>;
+  add(sessionId: string, message: Message): Promise<void>;
 
-
-  add(
-    sessionId: string,
-    message: Message
-  ): Promise<void>;
-
-
-  clear(
-    sessionId: string
-  ): Promise<void>;
-
+  clear(sessionId: string): Promise<void>;
 }
 ```
 
@@ -107,22 +94,19 @@ interface Memory {
 Retrieves stored messages for a session.
 
 ```ts
-memory.get(sessionId)
+memory.get(sessionId);
 ```
 
 **Returns**
 
 ```ts
-Promise<Message[]>
+Promise<Message[]>;
 ```
 
 Example:
 
 ```ts
-const history =
-  await memory.get(
-    "user_123"
-  );
+const history = await memory.get('user_123');
 ```
 
 ---
@@ -132,29 +116,20 @@ const history =
 Stores a new message.
 
 ```ts
-memory.add(
-  sessionId,
-  message
-)
+memory.add(sessionId, message);
 ```
 
 Example:
 
 ```ts
 await memory.add(
-
-  "user_123",
+  'user_123',
 
   {
+    role: 'user',
 
-    role:
-      "user",
-
-    content:
-      "My name is Tejas."
-
-  }
-
+    content: 'My name is Tejas.',
+  },
 );
 ```
 
@@ -165,15 +140,13 @@ await memory.add(
 Removes stored memory for a session.
 
 ```ts
-memory.clear(sessionId)
+memory.clear(sessionId);
 ```
 
 Example:
 
 ```ts
-await memory.clear(
-  "user_123"
-);
+await memory.clear('user_123');
 ```
 
 ---
@@ -184,16 +157,9 @@ Memory stores conversation messages.
 
 ```ts
 interface Message {
+  role: 'user' | 'assistant' | 'system';
 
-  role:
-    "user" |
-    "assistant" |
-    "system";
-
-
-  content:
-    string;
-
+  content: string;
 }
 ```
 
@@ -228,13 +194,9 @@ Useful for:
 Example:
 
 ```ts
-import {
-  InMemorySession
-} from "agni-sdk";
+import { InMemorySession } from 'agni-sdk';
 
-
-const memory =
-  new InMemorySession();
+const memory = new InMemorySession();
 ```
 
 ---
@@ -252,16 +214,11 @@ Useful for:
 Example:
 
 ```ts
-import {
-  SQLiteSession
-} from "agni-sdk";
+import { SQLiteSession } from 'agni-sdk';
 
-
-const memory =
-  new SQLiteSession({
-    database:
-      "./agent.db"
-  });
+const memory = new SQLiteSession({
+  database: './agent.db',
+});
 ```
 
 ---
@@ -279,18 +236,11 @@ Useful for:
 Example:
 
 ```ts
-import {
-  RedisSession
-} from "agni-sdk";
+import { RedisSession } from 'agni-sdk';
 
-
-const memory =
-  new RedisSession({
-
-    url:
-      process.env.REDIS_URL
-
-  });
+const memory = new RedisSession({
+  url: process.env.REDIS_URL,
+});
 ```
 
 ---
@@ -300,12 +250,9 @@ const memory =
 Memory is attached to the runtime execution.
 
 ```ts
-const runner =
-  new Runner({
-
-    memory,
-
-  });
+const runner = new Runner({
+  memory,
+});
 ```
 
 Now executions can reuse previous context.
@@ -392,45 +339,26 @@ You can implement your own storage backend.
 Example:
 
 ```ts
-class PostgresMemory
-implements Memory {
-
-
+class PostgresMemory implements Memory {
   async get(sessionId) {
-
     return database.messages.findMany({
-      sessionId
+      sessionId,
     });
-
   }
 
-
-  async add(
-    sessionId,
-    message
-  ) {
-
+  async add(sessionId, message) {
     await database.messages.create({
-
       sessionId,
 
-      ...message
-
+      ...message,
     });
-
   }
-
 
   async clear(sessionId) {
-
     await database.messages.deleteMany({
-
-      sessionId
-
+      sessionId,
     });
-
   }
-
 }
 ```
 
@@ -447,20 +375,19 @@ Each user should have a unique session identifier.
 Example:
 
 ```ts
-sessionId =
-"user_123_conversation_456"
+sessionId = 'user_123_conversation_456';
 ```
 
 ---
 
 ## Storage selection
 
-| Storage | Best for |
-|---|---|
-| In-memory | Development |
-| SQLite | Single instance apps |
-| Redis | Distributed systems |
-| Custom database | Enterprise systems |
+| Storage         | Best for             |
+| --------------- | -------------------- |
+| In-memory       | Development          |
+| SQLite          | Single instance apps |
+| Redis           | Distributed systems  |
+| Custom database | Enterprise systems   |
 
 ---
 

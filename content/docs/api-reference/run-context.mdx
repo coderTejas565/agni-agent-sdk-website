@@ -24,8 +24,8 @@ Each execution receives its own isolated context.
 ## Import
 
 ```ts
-import type { RunContext } from "agni-sdk";
-````
+import type { RunContext } from 'agni-sdk';
+```
 
 ---
 
@@ -77,13 +77,11 @@ This allows every part of the runtime to access execution-scoped information wit
 
 ```ts
 interface RunContext<T = unknown> {
-
   runId: string;
 
   context: T;
 
   metadata?: Record<string, unknown>;
-
 }
 ```
 
@@ -96,27 +94,27 @@ interface RunContext<T = unknown> {
 Unique identifier for the current execution.
 
 ```ts
-context.runId
+context.runId;
 ```
 
 **Type**
 
 ```ts
-string
+string;
 ```
 
 Example:
 
 ```ts
-"a10bd101-6254-4d5b-bc03-b1272b7adda6"
+'a10bd101-6254-4d5b-bc03-b1272b7adda6';
 ```
 
 Use this identifier for:
 
-* Logging
-* Tracing
-* Debugging
-* Correlating events
+- Logging
+- Tracing
+- Debugging
+- Correlating events
 
 ---
 
@@ -125,13 +123,13 @@ Use this identifier for:
 Application-defined execution data.
 
 ```ts
-context.context
+context.context;
 ```
 
 **Type**
 
 ```ts
-T
+T;
 ```
 
 The value is provided when calling `runner.run()`.
@@ -140,23 +138,17 @@ Example:
 
 ```ts
 const result = await runner.run(
-
   agent,
 
-  "Book my flight",
+  'Book my flight',
 
   {
-
     context: {
+      userId: 'user_123',
 
-      userId: "user_123",
-
-      plan: "pro",
-
+      plan: 'pro',
     },
-
-  }
-
+  },
 );
 ```
 
@@ -169,13 +161,13 @@ Tools can use this data during execution.
 Optional runtime metadata.
 
 ```ts
-context.metadata
+context.metadata;
 ```
 
 **Type**
 
 ```ts
-Record<string, unknown> | undefined
+Record<string, unknown> | undefined;
 ```
 
 Use metadata for additional execution information.
@@ -202,29 +194,18 @@ Example:
 
 ```ts
 const userProfileTool = {
+  name: 'get_profile',
 
-  name: "get_profile",
+  description: 'Returns user profile information.',
 
-  description:
-    "Returns user profile information.",
-
-
-  async execute(
-    args,
-    context
-  ) {
-
-    const userId =
-      context.context.userId;
-
+  async execute(args, context) {
+    const userId = context.context.userId;
 
     return {
       userId,
-      name: "Tejas",
+      name: 'Tejas',
     };
-
   },
-
 };
 ```
 
@@ -238,23 +219,17 @@ Context is passed when executing an agent.
 
 ```ts
 const result = await runner.run(
-
   agent,
 
-  "Show my account details",
+  'Show my account details',
 
   {
-
     context: {
+      userId: 'user_123',
 
-      userId: "user_123",
-
-      role: "admin",
-
+      role: 'admin',
     },
-
-  }
-
+  },
 );
 ```
 
@@ -266,32 +241,23 @@ You can provide your own context type.
 
 ```ts
 type AppContext = {
-
   userId: string;
 
   organizationId: string;
-
 };
 
-
 const result = await runner.run<AppContext>(
-
   agent,
 
-  "Generate report",
+  'Generate report',
 
   {
-
     context: {
+      userId: 'user_123',
 
-      userId: "user_123",
-
-      organizationId: "org_456",
-
+      organizationId: 'org_456',
     },
-
-  }
-
+  },
 );
 ```
 
@@ -341,9 +307,9 @@ Context is not persisted between runs.
 
 For persistent state, use:
 
-* Memory
-* Session storage
-* External databases
+- Memory
+- Session storage
+- External databases
 
 ---
 
@@ -355,9 +321,7 @@ Store authenticated user information.
 
 ```ts
 {
-
- userId: "user_123"
-
+  userId: 'user_123';
 }
 ```
 
@@ -369,9 +333,7 @@ Track API requests.
 
 ```ts
 {
-
- requestId: "req_123"
-
+  requestId: 'req_123';
 }
 ```
 
@@ -383,9 +345,7 @@ Control agent behavior.
 
 ```ts
 {
-
- experimentalTools: true
-
+  experimentalTools: true;
 }
 ```
 
@@ -393,7 +353,7 @@ Control agent behavior.
 
 # Related
 
-* [`Runner`](/docs/api-reference/runner)
-* [`Agent`](/docs/api-reference/agent)
-* [`Memory`](/docs/api-reference/memory)
-* [`RunResult`](/docs/api-reference/run-result)
+- [`Runner`](/docs/api-reference/runner)
+- [`Agent`](/docs/api-reference/agent)
+- [`Memory`](/docs/api-reference/memory)
+- [`RunResult`](/docs/api-reference/run-result)

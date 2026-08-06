@@ -3,13 +3,11 @@
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
 
-
 /* =================================
    AGNI DESIGN TOKENS
 ================================= */
 
 :root {
-
   --background: #fafaf7;
   --foreground: #111111;
 
@@ -18,502 +16,271 @@
 
   --border: #e4e4e7;
 
-
   --text-primary: #111111;
   --text-secondary: #52525b;
   --text-muted: #71717a;
-
 
   --agni-orange: #ff7a00;
   --agni-orange-hover: #ff8c1a;
   --agni-orange-dark: #e56a00;
 
-  --agni-glow:
-    rgba(255,122,0,0.12);
-
+  --agni-glow: rgba(255, 122, 0, 0.12);
 
   --radius: 12px;
 
-
-
   /* Fumadocs */
 
-  --fd-background:
-    var(--background);
+  --fd-background: var(--background);
 
-  --fd-foreground:
-    var(--foreground);
+  --fd-foreground: var(--foreground);
 
-  --fd-card:
-    var(--surface);
+  --fd-card: var(--surface);
 
-  --fd-border:
-    var(--border);
+  --fd-border: var(--border);
 
-  --fd-primary:
-    var(--agni-orange);
+  --fd-primary: var(--agni-orange);
 
-  --fd-primary-foreground:
-    #ffffff;
-
-
+  --fd-primary-foreground: #ffffff;
 
   /* Shiki */
 
-  --shiki-light-bg:
-    #ffffff;
+  --shiki-light-bg: #ffffff;
 
-  --shiki-light:
-    #111111;
-
+  --shiki-light: #111111;
 }
-
 
 .dark {
+  --background: #080808;
 
+  --foreground: #ffffff;
 
-  --background:
-    #080808;
+  --surface: #111111;
 
-  --foreground:
-    #ffffff;
+  --surface-muted: #18181b;
 
+  --border: rgba(255, 255, 255, 0.08);
 
-  --surface:
-    #111111;
+  --text-primary: #ffffff;
 
-  --surface-muted:
-    #18181b;
+  --text-secondary: #a1a1aa;
 
+  --text-muted: #71717a;
 
-  --border:
-    rgba(255,255,255,0.08);
+  --agni-glow: rgba(255, 122, 0, 0.15);
 
+  --fd-background: var(--background);
 
-  --text-primary:
-    #ffffff;
+  --fd-foreground: var(--foreground);
 
-  --text-secondary:
-    #a1a1aa;
+  --fd-card: var(--surface);
 
-  --text-muted:
-    #71717a;
+  --fd-border: var(--border);
 
-
-
-  --agni-glow:
-    rgba(255,122,0,0.15);
-
-
-
-  --fd-background:
-    var(--background);
-
-  --fd-foreground:
-    var(--foreground);
-
-  --fd-card:
-    var(--surface);
-
-  --fd-border:
-    var(--border);
-
-  --fd-primary:
-    var(--agni-orange);
-
-
+  --fd-primary: var(--agni-orange);
 
   /* Shiki */
 
-  --shiki-dark-bg:
-    #0d0d0d;
+  --shiki-dark-bg: #0d0d0d;
 
-  --shiki-dark:
-    #ffffff;
-
+  --shiki-dark: #ffffff;
 }
-
-
 
 /* =================================
    TAILWIND
 ================================= */
 
 @theme {
+  --color-background: var(--background);
 
-  --color-background:
-    var(--background);
+  --color-foreground: var(--foreground);
 
-  --color-foreground:
-    var(--foreground);
+  --color-surface: var(--surface);
 
-  --color-surface:
-    var(--surface);
+  --color-surface-muted: var(--surface-muted);
 
-  --color-surface-muted:
-    var(--surface-muted);
+  --color-border: var(--border);
 
-  --color-border:
-    var(--border);
+  --color-primary: var(--agni-orange);
 
+  --color-primary-hover: var(--agni-orange-hover);
 
-  --color-primary:
-    var(--agni-orange);
+  --color-muted: var(--text-muted);
 
-  --color-primary-hover:
-    var(--agni-orange-hover);
-
-
-  --color-muted:
-    var(--text-muted);
-
-
-  --radius-lg:
-    var(--radius);
-
+  --radius-lg: var(--radius);
 }
-
-
 
 /* =================================
    BASE
 ================================= */
 
 * {
-  border-color:
-    var(--border);
+  border-color: var(--border);
 }
-
 
 html {
-  scroll-behavior:
-    smooth;
+  scroll-behavior: smooth;
 }
-
 
 body {
+  background: var(--background);
 
-  background:
-    var(--background);
+  color: var(--foreground);
 
-  color:
-    var(--foreground);
+  font-family: var(--font-geist-sans), Inter, ui-sans-serif, system-ui, sans-serif;
 
-
-  font-family:
-    var(--font-geist-sans),
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    sans-serif;
-
-
-  -webkit-font-smoothing:
-    antialiased;
-
+  -webkit-font-smoothing: antialiased;
 }
-
-
 
 /* =================================
    SELECTION
 ================================= */
 
-
 ::selection {
-
-  background:
-    rgba(255,122,0,0.25);
-
+  background: rgba(255, 122, 0, 0.25);
 }
-
-
 
 /* =================================
    SCROLLBAR
 ================================= */
 
-
 ::-webkit-scrollbar {
-
-  width:
-    10px;
-
+  width: 10px;
 }
-
 
 ::-webkit-scrollbar-track {
-
-  background:
-    var(--background);
-
+  background: var(--background);
 }
-
 
 ::-webkit-scrollbar-thumb {
+  background: #27272a;
 
-  background:
-    #27272a;
-
-  border-radius:
-    999px;
-
+  border-radius: 999px;
 }
-
-
 
 /* =================================
    AGNI UTILITIES
 ================================= */
 
-
 .agni-glow {
-
-  background:
-    radial-gradient(
-      circle,
-      var(--agni-glow),
-      transparent 65%
-    );
-
+  background: radial-gradient(circle, var(--agni-glow), transparent 65%);
 }
-
 
 .surface-card {
+  background: var(--surface);
 
-  background:
-    var(--surface);
+  border: 1px solid var(--border);
 
-
-  border:
-    1px solid var(--border);
-
-
-  border-radius:
-    var(--radius);
-
+  border-radius: var(--radius);
 }
-
 
 .glass {
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
 
-  background:
-    color-mix(
-      in srgb,
-      var(--surface) 80%,
-      transparent
-    );
-
-
-  backdrop-filter:
-    blur(12px);
-
+  backdrop-filter: blur(12px);
 }
-
-
 
 /* =================================
    DOCS
 ================================= */
 
-
 /* Navbar */
 
 .fd-docs nav {
+  background: color-mix(in srgb, var(--background) 80%, transparent);
 
-  background:
-    color-mix(
-      in srgb,
-      var(--background) 80%,
-      transparent
-    );
+  backdrop-filter: blur(14px);
 
-
-  backdrop-filter:
-    blur(14px);
-
-
-  border-bottom:
-    1px solid var(--border);
-
+  border-bottom: 1px solid var(--border);
 }
-
-
 
 /* Sidebar */
 
-
 .fd-sidebar {
-
-  background:
-    var(--background);
-
+  background: var(--background);
 }
-
 
 .fd-sidebar a {
-
-  color:
-    var(--text-secondary);
-
+  color: var(--text-secondary);
 }
-
 
 .fd-sidebar a:hover {
-
-  color:
-    var(--text-primary);
-
+  color: var(--text-primary);
 }
-
-
 
 /* Active page */
 
+.fd-sidebar a[data-active='true'] {
+  color: var(--text-primary);
 
-.fd-sidebar a[data-active="true"] {
-
-
-  color:
-    var(--text-primary);
-
-
-  border-left:
-    2px solid var(--agni-orange);
-
+  border-left: 2px solid var(--agni-orange);
 }
-
-
 
 /* =================================
    PROSE
 ================================= */
 
-
 .prose {
-
-  color:
-    var(--text-secondary);
-
+  color: var(--text-secondary);
 }
-
 
 .prose h1,
 .prose h2,
 .prose h3 {
+  color: var(--text-primary);
 
-
-  color:
-    var(--text-primary);
-
-
-  letter-spacing:
-    -0.02em;
-
+  letter-spacing: -0.02em;
 }
-
 
 .prose a {
-
-  color:
-    var(--agni-orange);
-
+  color: var(--agni-orange);
 }
-
 
 .prose a:hover {
-
-  color:
-    var(--agni-orange-hover);
-
+  color: var(--agni-orange-hover);
 }
-
-
 
 /* =================================
    CODE BLOCKS
 ================================= */
 
-
-
-
-
 /* IMPORTANT:
    Do not override fumadocs pre background
 */
 
-
 figure[data-rehype-pretty-code-figure] {
+  border: 1px solid var(--border);
 
+  border-radius: var(--radius);
 
-  border:
-    1px solid var(--border);
-
-
-  border-radius:
-    var(--radius);
-
-
-  overflow:
-    hidden;
-
+  overflow: hidden;
 }
-
-
 
 pre {
+  border-radius: var(--radius);
 
-  border-radius:
-    var(--radius);
-
-
-  font-family:
-    var(--font-geist-mono),
-    monospace;
-
+  font-family: var(--font-geist-mono), monospace;
 }
-
-
 
 /* inline code */
 
-
 :not(pre) > code {
+  background: var(--surface-muted);
 
-  background:
-    var(--surface-muted);
+  border: 1px solid var(--border);
 
+  border-radius: 6px;
 
-  border:
-    1px solid var(--border);
-
-
-  border-radius:
-    6px;
-
-
-  padding:
-    0.15rem 0.35rem;
-
+  padding: 0.15rem 0.35rem;
 }
-
-
 
 /* =================================
    CALLOUTS
 ================================= */
 
-
 [data-callout] {
+  border-left: 3px solid var(--agni-orange);
 
-
-  border-left:
-    3px solid var(--agni-orange);
-
-
-  background:
-    rgba(255,122,0,0.05);
-
+  background: rgba(255, 122, 0, 0.05);
 }
 
 /* =================================
@@ -523,20 +290,15 @@ pre {
 .prose pre,
 [data-rehype-pretty-code-figure] pre,
 pre {
-
   font-size: 15px !important;
 
   line-height: 1.75 !important;
-
 }
-
 
 .prose pre code,
 [data-rehype-pretty-code-figure] code,
 pre code {
-
   font-size: 15px !important;
 
   line-height: 1.75 !important;
-
 }

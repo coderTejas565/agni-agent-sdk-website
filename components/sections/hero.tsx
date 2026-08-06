@@ -33,22 +33,22 @@ const item: Variants = {
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden min-h-screen flex items-center bg-background">
-      <div className="mx-auto max-w-7xl px-6 w-full pt-28 lg:pt-29 pb-16 lg:pb-20">
+    <section className="bg-background relative flex min-h-screen items-center overflow-hidden">
+      <div className="mx-auto w-full max-w-7xl px-6 pt-28 pb-16 lg:pt-29 lg:pb-20">
         <motion.div
           variants={container}
           initial="hidden"
           animate="show"
-          className="grid grid-cols-1 lg:grid-cols-5 gap-14 xl:gap-20 items-center"
+          className="grid grid-cols-1 items-center gap-14 lg:grid-cols-5 xl:gap-20"
         >
           {/* ─── LEFT — Content ─── */}
-          <div className="lg:col-span-3 space-y-8">
+          <div className="space-y-8 lg:col-span-3">
             <motion.div variants={item} className="space-y-2">
-              <h1 className="text-foreground text-5xl sm:text-6xl lg:text-[82px] font-bold tracking-[-0.04em] leading-[1.05]">
+              <h1 className="text-foreground text-5xl leading-[1.05] font-bold tracking-[-0.04em] sm:text-6xl lg:text-[82px]">
                 <div>Build reliable</div>
-                <div className="text-[#FF7A00] relative inline-block mt-1">
+                <div className="relative mt-1 inline-block text-[#FF7A00]">
                   AI agents
-                  <span className="absolute -bottom-3 left-0 w-full h-[4px] bg-[#FF7A00]/40 rounded-full" />
+                  <span className="absolute -bottom-3 left-0 h-[4px] w-full rounded-full bg-[#FF7A00]/40" />
                 </div>
                 <div className="text-foreground/90 mt-4">with TypeScript.</div>
               </h1>
@@ -56,7 +56,7 @@ export function Hero() {
 
             <motion.div
               variants={item}
-              className="w-16 h-0.5 bg-gradient-to-r from-[#FF7A00] to-[#FF7A00]/0 rounded-full"
+              className="h-0.5 w-16 rounded-full bg-gradient-to-r from-[#FF7A00] to-[#FF7A00]/0"
             />
 
             <motion.p
@@ -68,10 +68,7 @@ export function Hero() {
               auditable, and predictable — no black boxes.
             </motion.p>
 
-            <motion.div
-              variants={item}
-              className="flex flex-wrap gap-3 pt-1"
-            >
+            <motion.div variants={item} className="flex flex-wrap gap-3 pt-1">
               {[
                 { icon: Zap, label: '0.8ms overhead' },
                 { icon: Shield, label: 'Type-safe tools' },
@@ -79,7 +76,7 @@ export function Hero() {
               ].map(({ icon: Icon, label }) => (
                 <div
                   key={label}
-                  className="flex items-center gap-2 rounded-full border border-border bg-surface/50 px-4 py-2 text-sm text-muted-foreground backdrop-blur-sm transition-all duration-200 hover:border-[#FF7A00]/30 hover:bg-[#FF7A00]/5 hover:text-foreground"
+                  className="border-border bg-surface/50 text-muted-foreground hover:text-foreground flex items-center gap-2 rounded-full border px-4 py-2 text-sm backdrop-blur-sm transition-all duration-200 hover:border-[#FF7A00]/30 hover:bg-[#FF7A00]/5"
                 >
                   <Icon size={14} className="text-[#FF7A00]" />
                   {label}
@@ -87,22 +84,22 @@ export function Hero() {
               ))}
             </motion.div>
 
-            <motion.div
-              variants={item}
-              className="flex flex-col sm:flex-row gap-4 pt-4"
-            >
+            <motion.div variants={item} className="flex flex-col gap-4 pt-4 sm:flex-row">
               <Link
                 href="/docs/getting-started/quickstart"
-                className="group inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF7A00] px-10 py-4 font-medium text-white text-base transition-all duration-200 hover:bg-[#FF8C1A] hover:scale-[1.02] hover:shadow-2xl hover:shadow-[#FF7A00]/30 active:scale-[0.97]"
+                className="group inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF7A00] px-10 py-4 text-base font-medium text-white transition-all duration-200 hover:scale-[1.02] hover:bg-[#FF8C1A] hover:shadow-2xl hover:shadow-[#FF7A00]/30 active:scale-[0.97]"
               >
                 <Sparkles size={18} />
                 Start building
-                <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+                <ArrowRight
+                  size={18}
+                  className="transition-transform group-hover:translate-x-1"
+                />
               </Link>
 
               <Link
                 href="#architecture"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-border px-10 py-4 font-medium text-muted-foreground text-base transition-all duration-200 hover:border-[#FF7A00]/40 hover:bg-[#FF7A00]/5 hover:text-foreground"
+                className="border-border text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-2 rounded-xl border px-10 py-4 text-base font-medium transition-all duration-200 hover:border-[#FF7A00]/40 hover:bg-[#FF7A00]/5"
               >
                 <Code2 size={18} />
                 View architecture
@@ -111,12 +108,9 @@ export function Hero() {
           </div>
 
           {/* ─── RIGHT — Forge Chamber Visual ─── */}
-          <motion.div
-            variants={item}
-            className="lg:col-span-2 space-y-4"
-          >
-            <div className="relative rounded-xl border border-border bg-surface/30 p-4 backdrop-blur-sm transition-all hover:border-[#FF7A00]/20">
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#FF7A00]/5 to-transparent -z-10" />
+          <motion.div variants={item} className="space-y-4 lg:col-span-2">
+            <div className="border-border bg-surface/30 relative rounded-xl border p-4 backdrop-blur-sm transition-all hover:border-[#FF7A00]/20">
+              <div className="absolute inset-0 -z-10 rounded-xl bg-gradient-to-br from-[#FF7A00]/5 to-transparent" />
               <ForgeChamber />
             </div>
 
@@ -133,9 +127,16 @@ export function Hero() {
 function ForgeChamber() {
   const controls = useAnimation();
 
-  const [phase, setPhase] = useState<'idle' | 'input' | 'processing' | 'tools' | 'memory' | 'guardrails' | 'output' | 'rest'>(
-    'idle'
-  );
+  const [phase, setPhase] = useState<
+    | 'idle'
+    | 'input'
+    | 'processing'
+    | 'tools'
+    | 'memory'
+    | 'guardrails'
+    | 'output'
+    | 'rest'
+  >('idle');
 
   useEffect(() => {
     const runSequence = async () => {
@@ -188,7 +189,7 @@ function ForgeChamber() {
   return (
     <svg
       viewBox="0 0 500 280"
-      className="w-full h-auto"
+      className="h-auto w-full"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       role="img"
@@ -616,7 +617,12 @@ function ForgeChamber() {
             idle: { opacity: 0, scale: 0, x: 0, y: 0 },
             toolsActive: { opacity: [0, 0.8, 0], scale: [0, 2.5, 0], x: p.dx, y: p.dy },
             memoryActive: { opacity: [0, 0.8, 0], scale: [0, 2.5, 0], x: p.dx, y: p.dy },
-            guardrailsActive: { opacity: [0, 0.8, 0], scale: [0, 2.5, 0], x: p.dx, y: p.dy },
+            guardrailsActive: {
+              opacity: [0, 0.8, 0],
+              scale: [0, 2.5, 0],
+              x: p.dx,
+              y: p.dy,
+            },
             outputActive: { opacity: [0, 0.8, 0], scale: [0, 2.5, 0], x: p.dx, y: p.dy },
           }}
           transition={{ duration: 0.4 }}
@@ -681,8 +687,8 @@ function CompactLog() {
   }, [visible]);
 
   return (
-    <div className="rounded-lg border border-border bg-surface/30 px-4 py-2.5 font-mono text-xs backdrop-blur-sm transition-all">
-      <div className="flex items-center gap-3 flex-wrap">
+    <div className="border-border bg-surface/30 rounded-lg border px-4 py-2.5 font-mono text-xs backdrop-blur-sm transition-all">
+      <div className="flex flex-wrap items-center gap-3">
         {logItems.map((item, i) => (
           <motion.div
             key={item.label}
@@ -705,7 +711,7 @@ function CompactLog() {
           <motion.span
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="text-[#FF7A00] font-medium"
+            className="font-medium text-[#FF7A00]"
           >
             ✓ done
           </motion.span>

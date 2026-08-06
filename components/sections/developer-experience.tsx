@@ -31,14 +31,11 @@ const container: Variants = {
 
 export function DeveloperExperience() {
   return (
-    <section
-      id="developer"
-      className="relative overflow-hidden py-20 lg:py-28"
-    >
+    <section id="developer" className="relative overflow-hidden py-20 lg:py-28">
       {/* Ambient glow */}
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[600px] h-[600px] bg-[#FF7A00]/4 rounded-full blur-[160px]" />
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-[#FF7A00]/3 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 right-0 h-[600px] w-[600px] -translate-y-1/2 rounded-full bg-[#FF7A00]/4 blur-[160px]" />
+        <div className="absolute bottom-0 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-[#FF7A00]/3 blur-[120px]" />
       </div>
 
       <motion.div
@@ -71,11 +68,8 @@ export function DeveloperExperience() {
         </motion.div>
 
         {/* ── Code Editor ── */}
-        <motion.div
-          variants={fadeUp}
-          className="mx-auto mt-16 max-w-5xl"
-        >
-          <div className="border-border/60 bg-background/40 overflow-hidden rounded-2xl border backdrop-blur-sm shadow-[0_30px_100px_-40px_rgba(255,122,0,0.15)]">
+        <motion.div variants={fadeUp} className="mx-auto mt-16 max-w-5xl">
+          <div className="border-border/60 bg-background/40 overflow-hidden rounded-2xl border shadow-[0_30px_100px_-40px_rgba(255,122,0,0.15)] backdrop-blur-sm">
             {/* Editor Header */}
             <div className="border-border/50 bg-muted/20 flex items-center justify-between border-b px-5 py-3">
               <div className="flex gap-2">
@@ -83,9 +77,7 @@ export function DeveloperExperience() {
                 <span className="h-3 w-3 rounded-full bg-yellow-400/70" />
                 <span className="h-3 w-3 rounded-full bg-green-400/70" />
               </div>
-              <span className="text-muted-foreground/50 font-mono text-xs">
-                agent.ts
-              </span>
+              <span className="text-muted-foreground/50 font-mono text-xs">agent.ts</span>
               <span className="border-border/50 text-muted-foreground rounded-full border px-3 py-1 font-mono text-[10px]">
                 TypeScript
               </span>
@@ -94,175 +86,84 @@ export function DeveloperExperience() {
             {/* ── Code ── */}
             <div className="flex font-mono text-[13px] leading-7">
               {/* Line numbers */}
-              <div className="border-border/30 text-muted-foreground/30 border-r px-4 py-5 text-right select-none text-xs">
+              <div className="border-border/30 text-muted-foreground/30 border-r px-4 py-5 text-right text-xs select-none">
                 {Array.from({ length: 22 }).map((_, i) => (
                   <div key={i}>{String(i + 1).padStart(2, '0')}</div>
                 ))}
               </div>
 
               <pre className="text-foreground overflow-x-auto p-5 text-left">
-  <code>
-    <span className="text-muted-foreground">
-      import
-    </span>{" "}
-    {"{ "}
-    <span className="text-[#FF7A00]">Agent</span>
-    {", "}
-    <span className="text-[#FF7A00]">Runner</span>
-    {", "}
-    <span className="text-[#FF7A00]">GeminiProvider</span>
-    {" }"}
-    {"\n"}
-
-    <span className="text-muted-foreground">
-      from
-    </span>{" "}
-    <span className="text-emerald-500">
-  {"\"agni-agent-sdk\""}
-</span>
-    {";"}
-
-    {"\n\n"}
-
-    <span className="text-muted-foreground">
-      const
-    </span>{" "}
-    <span className="text-[#FF7A00]">
-      agent
-    </span>{" "}
-    =
-    {" "}
-    <span className="text-muted-foreground">
-      new
-    </span>{" "}
-    <span className="text-[#FF7A00]">
-      Agent
-    </span>
-    ({"{"})
-
-    {"\n  "}
-
-    <span className="text-muted-foreground">
-      name
-    </span>
-    :
-    {" "}
-    <span className="text-emerald-500">
-  {"\"weather-agent\""}
-</span>
-    ,
-
-    {"\n\n  "}
-
-    <span className="text-muted-foreground">
-      instructions
-    </span>
-    :
-    {" "}
-    <span className="text-emerald-500">
-      {"\"Use weather tools when needed.\""}
-    </span>
-    ,
-
-    {"\n\n  "}
-
-    <span className="text-muted-foreground">
-      provider
-    </span>
-    :
-    {" "}
-    <span className="text-muted-foreground">
-      new
-    </span>{" "}
-    <span className="text-[#FF7A00]">
-      GeminiProvider
-    </span>
-    ({"{"})
-
-    {"\n    "}
-    <span className="text-muted-foreground">
-      apiKey
-    </span>
-    :
-    {" "}
-    <span className="text-emerald-500">
-      process.env.GEMINI_API_KEY
-    </span>
-
-    {"\n  })"}
-
-    {","}
-
-    {"\n\n  "}
-
-    <span className="text-muted-foreground">
-      tools
-    </span>
-    :
-    {" ["}
-    <span className="text-[#FF7A00]">
-      weatherTool
-    </span>
-    {"]"}
-
-    {"\n"}
-
-    {"});"}
-
-    {"\n\n"}
-
-    <span className="text-muted-foreground">
-      const
-    </span>{" "}
-    <span className="text-[#FF7A00]">
-      result
-    </span>
-    {" "}
-    =
-    {" "}
-    <span className="text-muted-foreground">
-      await
-    </span>{" "}
-    <span className="text-[#FF7A00]">
-      new Runner()
-    </span>
-    .run(
-    
-    {"\n  "}
-    <span className="text-[#FF7A00]">
-      agent
-    </span>
-    ,
-
-    {"\n  "}
-    <span className="text-emerald-500">
-  {"\"What's the weather in Pune?\""}
-</span>
-
-    {"\n)"}
-  </code>
-</pre>
+                <code>
+                  <span className="text-muted-foreground">import</span> {'{ '}
+                  <span className="text-[#FF7A00]">Agent</span>
+                  {', '}
+                  <span className="text-[#FF7A00]">Runner</span>
+                  {', '}
+                  <span className="text-[#FF7A00]">GeminiProvider</span>
+                  {' }'}
+                  {'\n'}
+                  <span className="text-muted-foreground">from</span>{' '}
+                  <span className="text-emerald-500">{'"agni-agent-sdk"'}</span>
+                  {';'}
+                  {'\n\n'}
+                  <span className="text-muted-foreground">const</span>{' '}
+                  <span className="text-[#FF7A00]">agent</span> ={' '}
+                  <span className="text-muted-foreground">new</span>{' '}
+                  <span className="text-[#FF7A00]">Agent</span>({'{'}){'\n  '}
+                  <span className="text-muted-foreground">name</span>:{' '}
+                  <span className="text-emerald-500">{'"weather-agent"'}</span>,{'\n\n  '}
+                  <span className="text-muted-foreground">instructions</span>:{' '}
+                  <span className="text-emerald-500">
+                    {'"Use weather tools when needed."'}
+                  </span>
+                  ,{'\n\n  '}
+                  <span className="text-muted-foreground">provider</span>:{' '}
+                  <span className="text-muted-foreground">new</span>{' '}
+                  <span className="text-[#FF7A00]">GeminiProvider</span>({'{'}){'\n    '}
+                  <span className="text-muted-foreground">apiKey</span>:{' '}
+                  <span className="text-emerald-500">process.env.GEMINI_API_KEY</span>
+                  {'\n  })'}
+                  {','}
+                  {'\n\n  '}
+                  <span className="text-muted-foreground">tools</span>:{' ['}
+                  <span className="text-[#FF7A00]">weatherTool</span>
+                  {']'}
+                  {'\n'}
+                  {'});'}
+                  {'\n\n'}
+                  <span className="text-muted-foreground">const</span>{' '}
+                  <span className="text-[#FF7A00]">result</span> ={' '}
+                  <span className="text-muted-foreground">await</span>{' '}
+                  <span className="text-[#FF7A00]">new Runner()</span>
+                  .run(
+                  {'\n  '}
+                  <span className="text-[#FF7A00]">agent</span>,{'\n  '}
+                  <span className="text-emerald-500">
+                    {'"What\'s the weather in Pune?"'}
+                  </span>
+                  {'\n)'}
+                </code>
+              </pre>
             </div>
 
             {/* ── Execution Trace ── */}
             {/* ── Execution Trace ── */}
-<div className="border-border/50 bg-muted/10 border-t px-5 py-3">
-  <div className="flex items-center gap-4 font-mono text-xs">
-    <span className="text-muted-foreground/40">→</span>
-    <span className="text-muted-foreground">
-      <span className="text-[#FF7A00]">tool_call</span> get_weather
-    </span>
-    <span className="text-muted-foreground/30">•</span>
-    <span className="text-muted-foreground">
-      <span className="text-emerald-400">✓</span> 29°C, Sunny
-    </span>
-    <span className="text-muted-foreground/30">•</span>
-    <span className="text-muted-foreground">
-      completed in{' '}
-      <span className="text-[#FF7A00]">842</span>ms
-    </span>
-  </div>
-</div>
+            <div className="border-border/50 bg-muted/10 border-t px-5 py-3">
+              <div className="flex items-center gap-4 font-mono text-xs">
+                <span className="text-muted-foreground/40">→</span>
+                <span className="text-muted-foreground">
+                  <span className="text-[#FF7A00]">tool_call</span> get_weather
+                </span>
+                <span className="text-muted-foreground/30">•</span>
+                <span className="text-muted-foreground">
+                  <span className="text-emerald-400">✓</span> 29°C, Sunny
+                </span>
+                <span className="text-muted-foreground/30">•</span>
+                <span className="text-muted-foreground">
+                  completed in <span className="text-[#FF7A00]">842</span>ms
+                </span>
+              </div>
+            </div>
           </div>
         </motion.div>
 
@@ -314,9 +215,7 @@ function FeatureCard({
         <Icon size={18} />
       </div>
       <h3 className="text-foreground text-sm font-semibold">{title}</h3>
-      <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-        {description}
-      </p>
+      <p className="text-muted-foreground mt-2 text-sm leading-relaxed">{description}</p>
     </motion.div>
   );
 }

@@ -22,7 +22,7 @@ A tool is a function exposed to the model with a structured input schema.
 ## Import
 
 ```ts
-import type { Tool } from "agni-sdk";
+import type { Tool } from 'agni-sdk';
 ```
 
 ---
@@ -81,18 +81,13 @@ The runtime manages **how** the tool executes.
 
 ```ts
 interface Tool {
-
   name: string;
 
   description: string;
 
   parameters: ToolSchema;
 
-  execute(
-    args: unknown,
-    context?: RunContext
-  ): Promise<unknown>;
-
+  execute(args: unknown, context?: RunContext): Promise<unknown>;
 }
 ```
 
@@ -105,19 +100,19 @@ interface Tool {
 Unique identifier used by the model to call the tool.
 
 ```ts
-tool.name
+tool.name;
 ```
 
 **Type**
 
 ```ts
-string
+string;
 ```
 
 Example:
 
 ```ts
-"get_weather"
+'get_weather';
 ```
 
 ---
@@ -127,13 +122,13 @@ Example:
 Explains what the tool does.
 
 ```ts
-tool.description
+tool.description;
 ```
 
 **Type**
 
 ```ts
-string
+string;
 ```
 
 The description helps the model decide when to use the tool.
@@ -141,8 +136,7 @@ The description helps the model decide when to use the tool.
 Example:
 
 ```ts
-description:
-  "Returns the weather for a city."
+description: 'Returns the weather for a city.';
 ```
 
 ---
@@ -152,13 +146,13 @@ description:
 Defines the input schema expected by the tool.
 
 ```ts
-tool.parameters
+tool.parameters;
 ```
 
 **Type**
 
 ```ts
-ToolSchema
+ToolSchema;
 ```
 
 Agni uses this schema to describe tool arguments to the model.
@@ -195,15 +189,13 @@ Example:
 The function called when the tool is executed.
 
 ```ts
-tool.execute(args)
+tool.execute(args);
 ```
 
 **Type**
 
 ```ts
-(
- args: unknown
-) => Promise<unknown>
+(args: unknown) => Promise<unknown>;
 ```
 
 The return value is sent back to the model.
@@ -215,65 +207,36 @@ The return value is sent back to the model.
 Example:
 
 ```ts
-import type {
-  Tool
-} from "agni-sdk";
-
+import type { Tool } from 'agni-sdk';
 
 export const weatherTool: Tool = {
+  name: 'get_weather',
 
-  name:
-    "get_weather",
-
-
-  description:
-    "Returns the weather for a city.",
-
+  description: 'Returns the weather for a city.',
 
   parameters: {
-
-    type:
-      "object",
+    type: 'object',
 
     properties: {
-
       city: {
+        type: 'string',
 
-        type:
-          "string",
-
-        description:
-          "City name",
-
+        description: 'City name',
       },
-
     },
 
-    required: [
-      "city"
-    ],
-
+    required: ['city'],
   },
 
-
-  async execute(
-    { city }
-  ) {
-
+  async execute({ city }) {
     return {
-
       city,
 
-      temperature:
-        29,
+      temperature: 29,
 
-      condition:
-        "Sunny",
-
+      condition: 'Sunny',
     };
-
   },
-
 };
 ```
 
@@ -285,22 +248,13 @@ Tools are provided when creating an Agent.
 
 ```ts
 const agent = new Agent({
+  name: 'weather-agent',
 
-  name:
-    "weather-agent",
-
-
-  instructions:
-    "Use weather tools when required.",
-
+  instructions: 'Use weather tools when required.',
 
   provider,
 
-
-  tools: [
-    weatherTool
-  ],
-
+  tools: [weatherTool],
 });
 ```
 
@@ -309,25 +263,17 @@ const agent = new Agent({
 # Running a tool-enabled agent
 
 ```ts
-const result =
-  await runner.run(
+const result = await runner.run(
+  agent,
 
-    agent,
+  'What is the weather in Pune?',
 
-    "What is the weather in Pune?",
-
-    {
-
-      context: {},
-
-    }
-
-  );
-
-
-console.log(
-  result.output
+  {
+    context: {},
+  },
 );
+
+console.log(result.output);
 ```
 
 Example output:
@@ -387,42 +333,23 @@ Example:
 
 ```ts
 const profileTool: Tool = {
+  name: 'get_profile',
 
-  name:
-    "get_profile",
-
-
-  description:
-    "Returns user profile.",
-
+  description: 'Returns user profile.',
 
   parameters: {
-
-    type:
-      "object",
+    type: 'object',
 
     properties: {},
-
   },
 
-
-  async execute(
-    _args,
-    context
-  ) {
-
-    const userId =
-      context?.context.userId;
-
+  async execute(_args, context) {
+    const userId = context?.context.userId;
 
     return {
-
       userId,
-
     };
-
   },
-
 };
 ```
 

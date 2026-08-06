@@ -16,7 +16,7 @@ To execute an agent, use [`Runner`](/docs/api-reference/runner).
 ## Import
 
 ```ts
-import { Agent } from "agni-sdk";
+import { Agent } from 'agni-sdk';
 ```
 
 ---
@@ -26,7 +26,7 @@ import { Agent } from "agni-sdk";
 Creates a new Agent instance.
 
 ```ts
-new Agent(options)
+new Agent(options);
 ```
 
 ---
@@ -37,39 +37,31 @@ new Agent(options)
 
 Configuration object used to create an agent.
 
-| Parameter | Type | Required | Description |
-|---|---|---|---|
-| `name` | `string` | Yes | Name used to identify the agent |
-| `provider` | `ModelProvider` | Yes | Provider responsible for model generation |
-| `instructions` | `string` | No | System instructions passed to the model |
-| `tools` | `Tool[]` | No | Tools available during execution |
-| `providerOptions` | `Record<string, unknown>` | No | Provider-specific options |
+| Parameter         | Type                      | Required | Description                               |
+| ----------------- | ------------------------- | -------- | ----------------------------------------- |
+| `name`            | `string`                  | Yes      | Name used to identify the agent           |
+| `provider`        | `ModelProvider`           | Yes      | Provider responsible for model generation |
+| `instructions`    | `string`                  | No       | System instructions passed to the model   |
+| `tools`           | `Tool[]`                  | No       | Tools available during execution          |
+| `providerOptions` | `Record<string, unknown>` | No       | Provider-specific options                 |
 
 ---
 
 ## Example
 
 ```ts
-import {
-  Agent,
-  GeminiProvider,
-} from "agni-sdk";
-
+import { Agent, GeminiProvider } from 'agni-sdk';
 
 const provider = new GeminiProvider({
   apiKey: process.env.GEMINI_API_KEY!,
 });
 
-
 const agent = new Agent({
+  name: 'assistant',
 
-  name: "assistant",
-
-  instructions:
-    "You are a helpful AI assistant.",
+  instructions: 'You are a helpful AI assistant.',
 
   provider,
-
 });
 ```
 
@@ -81,18 +73,13 @@ Tools extend an agent's capabilities beyond text generation.
 
 ```ts
 const agent = new Agent({
+  name: 'weather-agent',
 
-  name: "weather-agent",
-
-  instructions:
-    "Use the weather tool whenever the user asks about weather.",
+  instructions: 'Use the weather tool whenever the user asks about weather.',
 
   provider,
 
-  tools: [
-    weatherTool,
-  ],
-
+  tools: [weatherTool],
 });
 ```
 
@@ -110,7 +97,7 @@ When a model requests a tool call, Agni's runtime handles:
 ## `name`
 
 ```ts
-agent.name
+agent.name;
 ```
 
 The unique name of the agent.
@@ -118,7 +105,7 @@ The unique name of the agent.
 **Type**
 
 ```ts
-string
+string;
 ```
 
 ---
@@ -126,7 +113,7 @@ string
 ## `instructions`
 
 ```ts
-agent.instructions
+agent.instructions;
 ```
 
 System-level instructions provided to the model.
@@ -134,7 +121,7 @@ System-level instructions provided to the model.
 **Type**
 
 ```ts
-string | undefined
+string | undefined;
 ```
 
 ---
@@ -142,7 +129,7 @@ string | undefined
 ## `provider`
 
 ```ts
-agent.provider
+agent.provider;
 ```
 
 The model provider used for generation.
@@ -150,7 +137,7 @@ The model provider used for generation.
 **Type**
 
 ```ts
-ModelProvider
+ModelProvider;
 ```
 
 ---
@@ -158,7 +145,7 @@ ModelProvider
 ## `tools`
 
 ```ts
-agent.tools
+agent.tools;
 ```
 
 Available tools registered with the agent.
@@ -174,7 +161,7 @@ Tool[]
 ## `providerOptions`
 
 ```ts
-agent.providerOptions
+agent.providerOptions;
 ```
 
 Additional provider-specific configuration.
@@ -182,7 +169,7 @@ Additional provider-specific configuration.
 **Type**
 
 ```ts
-Record<string, unknown> | undefined
+Record<string, unknown> | undefined;
 ```
 
 ---
@@ -195,11 +182,11 @@ Agents are executed using `Runner`.
 const result = await runner.run(
   agent,
 
-  "Explain how agents work.",
+  'Explain how agents work.',
 
   {
     context: {},
-  }
+  },
 );
 ```
 
@@ -219,14 +206,11 @@ The Runner manages the complete lifecycle:
 
 ```ts
 const assistant = new Agent({
+  name: 'assistant',
 
-  name: "assistant",
-
-  instructions:
-    "Answer questions clearly.",
+  instructions: 'Answer questions clearly.',
 
   provider,
-
 });
 ```
 
@@ -236,19 +220,13 @@ const assistant = new Agent({
 
 ```ts
 const researcher = new Agent({
+  name: 'researcher',
 
-  name: "researcher",
-
-  instructions:
-    "Research information before answering.",
+  instructions: 'Research information before answering.',
 
   provider,
 
-  tools: [
-    searchTool,
-    databaseTool,
-  ],
-
+  tools: [searchTool, databaseTool],
 });
 ```
 

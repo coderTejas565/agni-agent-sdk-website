@@ -28,36 +28,26 @@ Configuration used to create an agent.
 
 ```ts
 interface AgentConfig {
-
   name: string;
-
 
   instructions: string;
 
-
   provider: Provider;
 
-
   tools?: Tool[];
-
 }
 ```
 
 Example:
 
 ```ts
-const agent =
-  new Agent({
+const agent = new Agent({
+  name: 'assistant',
 
-    name:
-      "assistant",
+  instructions: 'You are helpful.',
 
-    instructions:
-      "You are helpful.",
-
-    provider,
-
-  });
+  provider,
+});
 ```
 
 ---
@@ -70,15 +60,9 @@ Represents an AI model provider.
 
 ```ts
 interface Provider {
-
   name: string;
 
-
-  generate(
-    request: ProviderRequest
-  ):
-    Promise<ProviderResponse>;
-
+  generate(request: ProviderRequest): Promise<ProviderResponse>;
 }
 ```
 
@@ -95,18 +79,11 @@ Input sent to a provider.
 
 ```ts
 interface ProviderRequest {
+  messages: Message[];
 
-  messages:
-    Message[];
+  tools?: Tool[];
 
-
-  tools?:
-    Tool[];
-
-
-  instructions?:
-    string;
-
+  instructions?: string;
 }
 ```
 
@@ -118,14 +95,9 @@ Normalized response returned from providers.
 
 ```ts
 interface ProviderResponse {
+  content: string;
 
-  content:
-    string;
-
-
-  toolCalls?:
-    ToolCall[];
-
+  toolCalls?: ToolCall[];
 }
 ```
 
@@ -139,25 +111,13 @@ Defines an executable capability.
 
 ```ts
 interface Tool {
+  name: string;
 
-  name:
-    string;
+  description: string;
 
+  parameters: ToolSchema;
 
-  description:
-    string;
-
-
-  parameters:
-    ToolSchema;
-
-
-  execute(
-    args:
-      unknown
-  ):
-    Promise<unknown>;
-
+  execute(args: unknown): Promise<unknown>;
 }
 ```
 
@@ -173,14 +133,9 @@ Represents a requested tool execution.
 
 ```ts
 interface ToolCall {
+  name: string;
 
-  name:
-    string;
-
-
-  arguments:
-    unknown;
-
+  arguments: unknown;
 }
 ```
 
@@ -194,14 +149,9 @@ Execution context available during a run.
 
 ```ts
 interface RunContext {
+  runId: string;
 
-  runId:
-    string;
-
-
-  context:
-    Record<string, unknown>;
-
+  context: Record<string, unknown>;
 }
 ```
 
@@ -217,22 +167,13 @@ Normalized result returned after execution.
 
 ```ts
 interface RunResult {
+  success: boolean;
 
-  success:
-    boolean;
+  output?: string;
 
+  error?: AgniError;
 
-  output?:
-    string;
-
-
-  error?:
-    AgniError;
-
-
-  metadata:
-    RunMetadata;
-
+  metadata: RunMetadata;
 }
 ```
 
@@ -248,14 +189,9 @@ Execution metadata.
 
 ```ts
 interface RunMetadata {
+  runId: string;
 
-  runId:
-    string;
-
-
-  turns:
-    number;
-
+  turns: number;
 }
 ```
 
@@ -269,18 +205,9 @@ Conversation message stored by memory.
 
 ```ts
 interface Message {
+  role: 'user' | 'assistant' | 'system';
 
-  role:
-    "user"
-    |
-    "assistant"
-    |
-    "system";
-
-
-  content:
-    string;
-
+  content: string;
 }
 ```
 
@@ -294,18 +221,11 @@ Base runtime event type.
 
 ```ts
 interface AgentEvent {
+  type: string;
 
-  type:
-    string;
+  timestamp: number;
 
-
-  timestamp:
-    number;
-
-
-  data:
-    unknown;
-
+  data: unknown;
 }
 ```
 
@@ -341,18 +261,11 @@ Structured runtime error.
 
 ```ts
 interface AgniError {
+  code: string;
 
-  code:
-    string;
+  message: string;
 
-
-  message:
-    string;
-
-
-  details?:
-    unknown;
-
+  details?: unknown;
 }
 ```
 
@@ -367,21 +280,7 @@ See:
 All public types are exported from the package root.
 
 ```ts
-import type {
-
-  Agent,
-
-  Tool,
-
-  Provider,
-
-  RunResult,
-
-  RunContext,
-
-  Message,
-
-} from "agni-sdk";
+import type { Agent, Tool, Provider, RunResult, RunContext, Message } from 'agni-sdk';
 ```
 
 ---
@@ -395,9 +294,7 @@ Recommended configuration:
 ```json
 {
   "compilerOptions": {
-
     "strict": true
-
   }
 }
 ```

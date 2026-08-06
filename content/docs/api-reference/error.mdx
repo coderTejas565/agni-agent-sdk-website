@@ -22,9 +22,7 @@ All runtime errors follow a consistent format.
 ## Import
 
 ```ts
-import type {
-  AgniError
-} from "agni-sdk";
+import type { AgniError } from 'agni-sdk';
 ```
 
 ---
@@ -35,13 +33,11 @@ Every Agni error contains:
 
 ```ts
 interface AgniError {
-
   code: string;
 
   message: string;
 
   details?: unknown;
-
 }
 ```
 
@@ -54,13 +50,13 @@ interface AgniError {
 Machine-readable error identifier.
 
 ```ts
-error.code
+error.code;
 ```
 
 **Type**
 
 ```ts
-string
+string;
 ```
 
 Use error codes for:
@@ -73,7 +69,7 @@ Use error codes for:
 Example:
 
 ```ts
-"PROVIDER_ERROR"
+'PROVIDER_ERROR';
 ```
 
 ---
@@ -83,7 +79,7 @@ Example:
 Human-readable explanation of the failure.
 
 ```ts
-error.message
+error.message;
 ```
 
 Example:
@@ -99,7 +95,7 @@ Unable to generate response from provider.
 Additional debugging information.
 
 ```ts
-error.details
+error.details;
 ```
 
 This field is optional and depends on the error type.
@@ -123,26 +119,18 @@ Example:
 Errors are returned through `RunResult`.
 
 ```ts
-const result =
-  await runner.run(
+const result = await runner.run(
+  agent,
 
-    agent,
+  'Explain AI agents',
 
-    "Explain AI agents",
-
-    {
-      context: {},
-    }
-
-  );
-
+  {
+    context: {},
+  },
+);
 
 if (!result.success) {
-
-  console.error(
-    result.error
-  );
-
+  console.error(result.error);
 }
 ```
 
@@ -152,13 +140,13 @@ if (!result.success) {
 
 Agni uses specific error codes for common failure scenarios.
 
-| Code | Description |
-|---|---|
-| `PROVIDER_ERROR` | AI provider request failed |
-| `TOOL_ERROR` | Tool execution failed |
+| Code               | Description                    |
+| ------------------ | ------------------------------ |
+| `PROVIDER_ERROR`   | AI provider request failed     |
+| `TOOL_ERROR`       | Tool execution failed          |
 | `VALIDATION_ERROR` | Invalid input or configuration |
-| `RUNTIME_ERROR` | Internal runtime failure |
-| `LIMIT_ERROR` | Execution limit exceeded |
+| `RUNTIME_ERROR`    | Internal runtime failure       |
+| `LIMIT_ERROR`      | Execution limit exceeded       |
 
 ---
 
@@ -201,15 +189,9 @@ Example:
 
 ```ts
 const weatherTool = {
-
   async execute() {
-
-    throw new Error(
-      "API unavailable"
-    );
-
-  }
-
+    throw new Error('API unavailable');
+  },
 };
 ```
 
@@ -292,36 +274,21 @@ Example:
 Recommended pattern:
 
 ```ts
-const result =
-  await runner.run(
-    agent,
-    input,
-    {
-      context: {},
-    }
-);
-
+const result = await runner.run(agent, input, {
+  context: {},
+});
 
 if (!result.success) {
-
   logger.error({
+    code: result.error.code,
 
-    code:
-      result.error.code,
+    message: result.error.message,
 
-    message:
-      result.error.message,
-
-    runId:
-      result.metadata.runId,
-
+    runId: result.metadata.runId,
   });
 
-
   return;
-
 }
-
 
 return result.output;
 ```

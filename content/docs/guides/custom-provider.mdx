@@ -45,26 +45,20 @@ Everything above can be implemented without changing Agni's runtime.
 Every provider implements the `ModelProvider` interface.
 
 ```ts
-import type {
-  ModelProvider,
-  ModelRequest,
-  ModelResponse,
-} from "agni-agent-sdk";
+import type { ModelProvider, ModelRequest, ModelResponse } from 'agni-agent-sdk';
 
 export class MyProvider implements ModelProvider {
   readonly info = {
-    name: "my-provider",
-    model: "my-model",
+    name: 'my-provider',
+    model: 'my-model',
   };
 
-  async generate(
-    request: ModelRequest
-  ): Promise<ModelResponse> {
+  async generate(request: ModelRequest): Promise<ModelResponse> {
     // Call your model
 
     return {
-      type: "text",
-      content: "Hello from my provider!",
+      type: 'text',
+      content: 'Hello from my provider!',
     };
   }
 }
@@ -132,9 +126,9 @@ A normal completion returns a text response.
 
 ```ts
 return {
-  type: "text",
+  type: 'text',
 
-  content: "Hello from Agni!",
+  content: 'Hello from Agni!',
 };
 ```
 
@@ -148,16 +142,16 @@ If your model requests tool execution, return a tool call response.
 
 ```ts
 return {
-  type: "tool_call",
+  type: 'tool_call',
 
   toolCalls: [
     {
-      id: "call_1",
+      id: 'call_1',
 
-      name: "get_weather",
+      name: 'get_weather',
 
       arguments: {
-        city: "Pune",
+        city: 'Pune',
       },
     },
   ],
