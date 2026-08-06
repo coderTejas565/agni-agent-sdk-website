@@ -102,7 +102,7 @@ export function Roadmap() {
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link
-                  href="https://github.com"
+                  href="https://github.com/coderTejas565/agni-agent-sdk"
                   target="_blank"
                   className="flex items-center justify-center gap-2 rounded-lg bg-[#FF7A00] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#FF8C1A]"
                 >
@@ -111,7 +111,7 @@ export function Roadmap() {
                 </Link>
 
                 <Link
-                  href="#docs"
+                  href="/docs"
                   className="border-border text-foreground hover:bg-accent rounded-lg border px-5 py-3 text-center text-sm font-medium transition"
                 >
                   Read Docs

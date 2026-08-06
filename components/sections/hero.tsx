@@ -1,10 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Code2 } from 'lucide-react';
-import {} from 'react-icons/fa';
-import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { ArrowRight, Code2, Zap, Shield, GitBranch, Sparkles } from 'lucide-react';
+import { motion, useAnimation } from 'framer-motion';
+import { useEffect, useState, useRef } from 'react';
 import type { Variants } from 'framer-motion';
 
 const container: Variants = {
@@ -32,213 +31,689 @@ const item: Variants = {
   },
 };
 
-// The actual runtime lifecycle this SDK produces — not decoration.
-const trace = [
-  { type: 'call', text: 'runner.run(agent, "Find latest AI news")' },
-  { type: 'tool', text: 'tool_call  → searchTool' },
-  { type: 'tool', text: 'tool_result ← 6 sources found' },
-  { type: 'done', text: 'run_completed  in 842ms' },
-];
-
-function TracePlayback() {
-  const [visible, setVisible] = useState(0);
-
-  useEffect(() => {
-    if (visible >= trace.length) return;
-    const t = setTimeout(() => setVisible((v) => v + 1), 550);
-    return () => clearTimeout(t);
-  }, [visible]);
-
+export function Hero() {
   return (
-    <div className="border-border space-y-2 border-t px-6 py-5 font-mono text-[13px]">
-      {trace.slice(0, visible).map((line, i) => (
+    <section className="relative overflow-hidden min-h-screen flex items-center bg-background">
+      <div className="mx-auto max-w-7xl px-6 w-full pt-28 lg:pt-29 pb-16 lg:pb-20">
         <motion.div
-          key={i}
-          initial={{ opacity: 0, x: -4 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3 }}
-          className="flex items-center gap-2"
+          variants={container}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-1 lg:grid-cols-5 gap-14 xl:gap-20 items-center"
         >
-          <span
-            className={
-              line.type === 'done'
-                ? 'text-[#FF7A00]'
-                : line.type === 'tool'
-                  ? 'text-zinc-500'
-                  : 'text-zinc-400'
-            }
+          {/* ─── LEFT — Content ─── */}
+          <div className="lg:col-span-3 space-y-8">
+            <motion.div variants={item} className="space-y-2">
+              <h1 className="text-foreground text-5xl sm:text-6xl lg:text-[82px] font-bold tracking-[-0.04em] leading-[1.05]">
+                <div>Build reliable</div>
+                <div className="text-[#FF7A00] relative inline-block mt-1">
+                  AI agents
+                  <span className="absolute -bottom-3 left-0 w-full h-[4px] bg-[#FF7A00]/40 rounded-full" />
+                </div>
+                <div className="text-foreground/90 mt-4">with TypeScript.</div>
+              </h1>
+            </motion.div>
+
+            <motion.div
+              variants={item}
+              className="w-16 h-0.5 bg-gradient-to-r from-[#FF7A00] to-[#FF7A00]/0 rounded-full"
+            />
+
+            <motion.p
+              variants={item}
+              className="text-muted-foreground max-w-xl text-lg leading-relaxed tracking-wide"
+            >
+              A TypeScript-first runtime that gives you complete control over agent
+              execution. Every tool call, memory lookup, and validation is visible,
+              auditable, and predictable — no black boxes.
+            </motion.p>
+
+            <motion.div
+              variants={item}
+              className="flex flex-wrap gap-3 pt-1"
+            >
+              {[
+                { icon: Zap, label: '0.8ms overhead' },
+                { icon: Shield, label: 'Type-safe tools' },
+                { icon: GitBranch, label: 'Deterministic execution' },
+              ].map(({ icon: Icon, label }) => (
+                <div
+                  key={label}
+                  className="flex items-center gap-2 rounded-full border border-border bg-surface/50 px-4 py-2 text-sm text-muted-foreground backdrop-blur-sm transition-all duration-200 hover:border-[#FF7A00]/30 hover:bg-[#FF7A00]/5 hover:text-foreground"
+                >
+                  <Icon size={14} className="text-[#FF7A00]" />
+                  {label}
+                </div>
+              ))}
+            </motion.div>
+
+            <motion.div
+              variants={item}
+              className="flex flex-col sm:flex-row gap-4 pt-4"
+            >
+              <Link
+                href="/docs/getting-started/quickstart"
+                className="group inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF7A00] px-10 py-4 font-medium text-white text-base transition-all duration-200 hover:bg-[#FF8C1A] hover:scale-[1.02] hover:shadow-2xl hover:shadow-[#FF7A00]/30 active:scale-[0.97]"
+              >
+                <Sparkles size={18} />
+                Start building
+                <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+              </Link>
+
+              <Link
+                href="#architecture"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-border px-10 py-4 font-medium text-muted-foreground text-base transition-all duration-200 hover:border-[#FF7A00]/40 hover:bg-[#FF7A00]/5 hover:text-foreground"
+              >
+                <Code2 size={18} />
+                View architecture
+              </Link>
+            </motion.div>
+          </div>
+
+          {/* ─── RIGHT — Forge Chamber Visual ─── */}
+          <motion.div
+            variants={item}
+            className="lg:col-span-2 space-y-4"
           >
-            {line.text}
-          </span>
-          {i === visible - 1 && visible < trace.length && (
-            <span className="h-3.5 w-[6px] animate-pulse bg-[#FF7A00]/70" />
-          )}
+            <div className="relative rounded-xl border border-border bg-surface/30 p-4 backdrop-blur-sm transition-all hover:border-[#FF7A00]/20">
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#FF7A00]/5 to-transparent -z-10" />
+              <ForgeChamber />
+            </div>
+
+            {/* ── Compact execution log ── */}
+            <CompactLog />
+          </motion.div>
         </motion.div>
-      ))}
-    </div>
+      </div>
+    </section>
   );
 }
 
-export function Hero() {
+// ─── FORGE CHAMBER SVG ───
+function ForgeChamber() {
+  const controls = useAnimation();
+
+  const [phase, setPhase] = useState<'idle' | 'input' | 'processing' | 'tools' | 'memory' | 'guardrails' | 'output' | 'rest'>(
+    'idle'
+  );
+
+  useEffect(() => {
+    const runSequence = async () => {
+      while (true) {
+        // Input draws in
+        setPhase('input');
+        await controls.start({ opacity: 1, strokeDashoffset: 0 }, { duration: 0.4 });
+        await new Promise((r) => setTimeout(r, 100));
+
+        // Processing beat
+        setPhase('processing');
+        await controls.start({ opacity: 0.6, scale: 1.02 }, { duration: 0.25 });
+        await controls.start({ opacity: 0.3, scale: 1 }, { duration: 0.25 });
+        await new Promise((r) => setTimeout(r, 150));
+
+        // Tools activates
+        setPhase('tools');
+        await controls.start('toolsActive', { duration: 0.3 });
+        await new Promise((r) => setTimeout(r, 150));
+
+        // Memory activates
+        setPhase('memory');
+        await controls.start('memoryActive', { duration: 0.3 });
+        await new Promise((r) => setTimeout(r, 150));
+
+        // Guardrails activates
+        setPhase('guardrails');
+        await controls.start('guardrailsActive', { duration: 0.3 });
+        await new Promise((r) => setTimeout(r, 150));
+
+        // Output activates
+        setPhase('output');
+        await controls.start('outputActive', { duration: 0.3 });
+        await new Promise((r) => setTimeout(r, 100));
+
+        // Rest state
+        setPhase('rest');
+        await new Promise((r) => setTimeout(r, 2000));
+
+        // Reset
+        await controls.start({ opacity: 0, strokeDashoffset: 0 }, { duration: 0.3 });
+        setPhase('idle');
+        await new Promise((r) => setTimeout(r, 300));
+      }
+    };
+
+    runSequence();
+  }, [controls]);
+
   return (
-    <section className="relative overflow-hidden pt-44 pb-24">
-      <div className="agni-glow pointer-events-none absolute top-0 left-1/2 -z-10 h-[550px] w-[550px] -translate-x-1/2 rounded-full opacity-40 blur-[140px]" />
+    <svg
+      viewBox="0 0 500 280"
+      className="w-full h-auto"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      role="img"
+      aria-label="Agni forge chamber — controlled thermal process"
+    >
+      <defs>
+        <filter id="chamberGlow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="6" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
 
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="mx-auto max-w-7xl px-6"
+        <filter id="pathGlow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="4" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      {/* ── Input Beam ── */}
+      <motion.path
+        d="M 20 140 L 125 140"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeDasharray="80 200"
+        strokeDashoffset={-200}
+        className="text-foreground/30"
+        animate={controls}
+        initial={{ opacity: 0 }}
+        transition={{ duration: 0.4 }}
+      />
+
+      {/* ── Forge Chamber (Hexagonal Faceted Block) ── */}
+      <motion.polygon
+        points="145,85 235,85 255,140 235,195 145,195 125,140"
+        fill="var(--background)"
+        fillOpacity="0.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        className="text-foreground/20"
+        filter="url(#chamberGlow)"
+        animate={controls}
+        initial={{ opacity: 0.6 }}
+        transition={{ duration: 0.3 }}
+      />
+
+      {/* Chamber inner glow */}
+      <motion.polygon
+        points="150,92 230,92 248,140 230,188 150,188 132,140"
+        fill="#FF7A00"
+        fillOpacity="0.04"
+        animate={{
+          fillOpacity: phase === 'processing' || phase === 'rest' ? 0.12 : 0.04,
+        }}
+        transition={{ duration: 0.3 }}
+      />
+
+      {/* ── Internal Facet Lines ── */}
+      {/* Vertical facet lines */}
+      <motion.line
+        x1="165"
+        y1="95"
+        x2="165"
+        y2="185"
+        stroke="currentColor"
+        strokeWidth="1"
+        className="text-foreground/15"
+        animate={controls}
+        initial={{ opacity: 0.15 }}
+      />
+      <motion.line
+        x1="205"
+        y1="90"
+        x2="205"
+        y2="190"
+        stroke="currentColor"
+        strokeWidth="1"
+        className="text-foreground/12"
+        animate={controls}
+        initial={{ opacity: 0.12 }}
+      />
+      <motion.line
+        x1="235"
+        y1="92"
+        x2="235"
+        y2="188"
+        stroke="currentColor"
+        strokeWidth="1"
+        className="text-foreground/10"
+        animate={controls}
+        initial={{ opacity: 0.1 }}
+      />
+
+      {/* Horizontal facet line */}
+      <motion.line
+        x1="140"
+        y1="140"
+        x2="245"
+        y2="140"
+        stroke="currentColor"
+        strokeWidth="1"
+        className="text-foreground/15"
+        animate={controls}
+        initial={{ opacity: 0.15 }}
+      />
+
+      {/* Diagonal facet lines */}
+      <motion.line
+        x1="155"
+        y1="115"
+        x2="235"
+        y2="115"
+        stroke="currentColor"
+        strokeWidth="0.8"
+        className="text-foreground/8"
+        animate={controls}
+        initial={{ opacity: 0.08 }}
+      />
+      <motion.line
+        x1="155"
+        y1="165"
+        x2="235"
+        y2="165"
+        stroke="currentColor"
+        strokeWidth="0.8"
+        className="text-foreground/8"
+        animate={controls}
+        initial={{ opacity: 0.08 }}
+      />
+
+      {/* ── Chamber Label ── */}
+      <text
+        x="188"
+        y="127"
+        fill="currentColor"
+        fontSize="12"
+        fontFamily="monospace"
+        fontWeight="600"
+        letterSpacing="0.2em"
+        className="text-foreground/40"
+        textAnchor="middle"
       >
-        <div className="mx-auto max-w-5xl text-center">
+        AGNI
+      </text>
+      <text
+        x="188"
+        y="144"
+        fill="currentColor"
+        fontSize="8"
+        fontFamily="monospace"
+        className="text-foreground/20"
+        textAnchor="middle"
+      >
+        RUNTIME
+      </text>
+
+      {/* ── Output Paths ── */}
+
+      {/* Path 1: Tools — thickest, solid */}
+      <motion.path
+        d="M 255 105 C 310 90, 350 80, 430 72"
+        stroke="currentColor"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeDasharray="1 0"
+        className="text-foreground/25"
+        filter="url(#pathGlow)"
+        animate={controls}
+        variants={{
+          idle: { opacity: 0.25, strokeDashoffset: 0 },
+          toolsActive: { opacity: 1, strokeDashoffset: 0, stroke: '#FF7A00' },
+        }}
+        transition={{ duration: 0.3 }}
+        initial={{ opacity: 0.25 }}
+      />
+      <motion.circle
+        cx="430"
+        cy="72"
+        r="6"
+        fill="currentColor"
+        fillOpacity="0.15"
+        className="text-foreground/25"
+        animate={controls}
+        variants={{
+          idle: { opacity: 0.15, fill: 'currentColor' },
+          toolsActive: { opacity: 1, fill: '#FF7A00' },
+        }}
+        transition={{ duration: 0.3 }}
+      />
+      <motion.circle
+        cx="430"
+        cy="72"
+        r="2.5"
+        fill="currentColor"
+        className="text-foreground/25"
+        animate={controls}
+        variants={{
+          idle: { opacity: 0.25, fill: 'currentColor' },
+          toolsActive: { opacity: 1, fill: '#FF7A00' },
+        }}
+        transition={{ duration: 0.3 }}
+      />
+      <motion.text
+        x="438"
+        y="76"
+        fill="currentColor"
+        fontSize="10"
+        fontFamily="monospace"
+        className="text-foreground/50"
+        animate={controls}
+        variants={{
+          idle: { opacity: 0.5 },
+          toolsActive: { opacity: 1, fill: '#FF7A00' },
+        }}
+        transition={{ duration: 0.3 }}
+      >
+        tools
+      </motion.text>
+
+      {/* Path 2: Memory — medium, dashed */}
+      <motion.path
+        d="M 255 140 C 310 138, 350 135, 430 132"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeDasharray="6 8"
+        className="text-foreground/20"
+        filter="url(#pathGlow)"
+        animate={controls}
+        variants={{
+          idle: { opacity: 0.2, strokeDashoffset: 0 },
+          memoryActive: { opacity: 1, strokeDashoffset: 0, stroke: '#FF7A00' },
+        }}
+        transition={{ duration: 0.3 }}
+        initial={{ opacity: 0.2 }}
+      />
+      <motion.circle
+        cx="430"
+        cy="132"
+        r="6"
+        fill="currentColor"
+        fillOpacity="0.15"
+        className="text-foreground/20"
+        animate={controls}
+        variants={{
+          idle: { opacity: 0.15, fill: 'currentColor' },
+          memoryActive: { opacity: 1, fill: '#FF7A00' },
+        }}
+        transition={{ duration: 0.3 }}
+      />
+      <motion.circle
+        cx="430"
+        cy="132"
+        r="2.5"
+        fill="currentColor"
+        className="text-foreground/20"
+        animate={controls}
+        variants={{
+          idle: { opacity: 0.2, fill: 'currentColor' },
+          memoryActive: { opacity: 1, fill: '#FF7A00' },
+        }}
+        transition={{ duration: 0.3 }}
+      />
+      <motion.text
+        x="438"
+        y="136"
+        fill="currentColor"
+        fontSize="10"
+        fontFamily="monospace"
+        className="text-foreground/50"
+        animate={controls}
+        variants={{
+          idle: { opacity: 0.5 },
+          memoryActive: { opacity: 1, fill: '#FF7A00' },
+        }}
+        transition={{ duration: 0.3 }}
+      >
+        memory
+      </motion.text>
+
+      {/* Path 3: Guardrails — medium-thin, dotted */}
+      <motion.path
+        d="M 255 175 C 310 185, 350 192, 430 195"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeDasharray="3 8"
+        className="text-foreground/18"
+        filter="url(#pathGlow)"
+        animate={controls}
+        variants={{
+          idle: { opacity: 0.18, strokeDashoffset: 0 },
+          guardrailsActive: { opacity: 1, strokeDashoffset: 0, stroke: '#FF7A00' },
+        }}
+        transition={{ duration: 0.3 }}
+        initial={{ opacity: 0.18 }}
+      />
+      <motion.circle
+        cx="430"
+        cy="195"
+        r="6"
+        fill="currentColor"
+        fillOpacity="0.15"
+        className="text-foreground/18"
+        animate={controls}
+        variants={{
+          idle: { opacity: 0.15, fill: 'currentColor' },
+          guardrailsActive: { opacity: 1, fill: '#FF7A00' },
+        }}
+        transition={{ duration: 0.3 }}
+      />
+      <motion.circle
+        cx="430"
+        cy="195"
+        r="2.5"
+        fill="currentColor"
+        className="text-foreground/18"
+        animate={controls}
+        variants={{
+          idle: { opacity: 0.18, fill: 'currentColor' },
+          guardrailsActive: { opacity: 1, fill: '#FF7A00' },
+        }}
+        transition={{ duration: 0.3 }}
+      />
+      <motion.text
+        x="438"
+        y="199"
+        fill="currentColor"
+        fontSize="10"
+        fontFamily="monospace"
+        className="text-foreground/50"
+        animate={controls}
+        variants={{
+          idle: { opacity: 0.5 },
+          guardrailsActive: { opacity: 1, fill: '#FF7A00' },
+        }}
+        transition={{ duration: 0.3 }}
+      >
+        guardrails
+      </motion.text>
+
+      {/* Path 4: Output — thinnest, solid */}
+      <motion.path
+        d="M 255 210 C 310 230, 350 245, 430 258"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeDasharray="1 0"
+        className="text-foreground/15"
+        filter="url(#pathGlow)"
+        animate={controls}
+        variants={{
+          idle: { opacity: 0.15, strokeDashoffset: 0 },
+          outputActive: { opacity: 1, strokeDashoffset: 0, stroke: '#FF7A00' },
+        }}
+        transition={{ duration: 0.3 }}
+        initial={{ opacity: 0.15 }}
+      />
+      <motion.circle
+        cx="430"
+        cy="258"
+        r="6"
+        fill="currentColor"
+        fillOpacity="0.15"
+        className="text-foreground/15"
+        animate={controls}
+        variants={{
+          idle: { opacity: 0.15, fill: 'currentColor' },
+          outputActive: { opacity: 1, fill: '#FF7A00' },
+        }}
+        transition={{ duration: 0.3 }}
+      />
+      <motion.circle
+        cx="430"
+        cy="258"
+        r="2.5"
+        fill="currentColor"
+        className="text-foreground/15"
+        animate={controls}
+        variants={{
+          idle: { opacity: 0.15, fill: 'currentColor' },
+          outputActive: { opacity: 1, fill: '#FF7A00' },
+        }}
+        transition={{ duration: 0.3 }}
+      />
+      <motion.text
+        x="438"
+        y="262"
+        fill="currentColor"
+        fontSize="10"
+        fontFamily="monospace"
+        className="text-foreground/50"
+        animate={controls}
+        variants={{
+          idle: { opacity: 0.5 },
+          outputActive: { opacity: 1, fill: '#FF7A00' },
+        }}
+        transition={{ duration: 0.3 }}
+      >
+        output
+      </motion.text>
+
+      {/* ── Split particles ── */}
+      {[
+        { cx: 257, cy: 100, dx: 8, dy: -4 },
+        { cx: 259, cy: 140, dx: 10, dy: 0 },
+        { cx: 257, cy: 178, dx: 8, dy: 4 },
+        { cx: 258, cy: 212, dx: 6, dy: 8 },
+      ].map((p, i) => (
+        <motion.circle
+          key={i}
+          cx={p.cx}
+          cy={p.cy}
+          r="1.5"
+          fill="#FF7A00"
+          fillOpacity="0.6"
+          animate={controls}
+          variants={{
+            idle: { opacity: 0, scale: 0, x: 0, y: 0 },
+            toolsActive: { opacity: [0, 0.8, 0], scale: [0, 2.5, 0], x: p.dx, y: p.dy },
+            memoryActive: { opacity: [0, 0.8, 0], scale: [0, 2.5, 0], x: p.dx, y: p.dy },
+            guardrailsActive: { opacity: [0, 0.8, 0], scale: [0, 2.5, 0], x: p.dx, y: p.dy },
+            outputActive: { opacity: [0, 0.8, 0], scale: [0, 2.5, 0], x: p.dx, y: p.dy },
+          }}
+          transition={{ duration: 0.4 }}
+        />
+      ))}
+
+      {/* ── Ambient glow behind chamber ── */}
+      <motion.circle
+        cx="190"
+        cy="140"
+        r="80"
+        fill="#FF7A00"
+        fillOpacity="0.04"
+        animate={{
+          r: phase === 'processing' ? 90 : 80,
+          opacity: phase === 'processing' ? 0.08 : 0.04,
+        }}
+        transition={{ duration: 0.5 }}
+      />
+    </svg>
+  );
+}
+
+// ─── COMPACT EXECUTION LOG ───
+function CompactLog() {
+  const [visible, setVisible] = useState(0);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const logItems = [
+    { label: 'tools', value: 'searchTool → 6 sources', icon: '⚡' },
+    { label: 'memory', value: 'cached context', icon: '≡' },
+    { label: 'guardrails', value: '3 checks passed', icon: '🛡' },
+    { label: 'output', value: 'completed in 842ms', icon: '◆' },
+  ];
+
+  useEffect(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+
+    if (visible >= logItems.length) {
+      timeoutRef.current = setTimeout(() => {
+        setVisible(0);
+      }, 3000);
+      return () => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      };
+    }
+
+    const delays = [400, 550, 700, 850];
+    timeoutRef.current = setTimeout(() => {
+      setVisible((prev) => prev + 1);
+    }, delays[visible] || 450);
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, [visible]);
+
+  return (
+    <div className="rounded-lg border border-border bg-surface/30 px-4 py-2.5 font-mono text-xs backdrop-blur-sm transition-all">
+      <div className="flex items-center gap-3 flex-wrap">
+        {logItems.map((item, i) => (
           <motion.div
-            variants={item}
-            className="text-foreground bg-muted/30 border-border mx-auto mb-8 flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm"
+            key={item.label}
+            initial={{ opacity: 0, x: -6 }}
+            animate={{ opacity: i < visible ? 1 : 0.15, x: i < visible ? 0 : -6 }}
+            transition={{ duration: 0.25 }}
+            className={`flex items-center gap-1.5 ${
+              i < visible ? 'text-foreground/80' : 'text-muted-foreground/30'
+            }`}
           >
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#FF7A00]/60" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#FF7A00]" />
-            </span>
-            Production runtime for AI agents
+            <span className="text-muted-foreground/50">{item.icon}</span>
+            <span className="text-[#FF7A00]">{item.label}</span>
+            <span className="text-muted-foreground/60">{item.value}</span>
+            {i < logItems.length - 1 && (
+              <span className="text-muted-foreground/30 mx-0.5">·</span>
+            )}
           </motion.div>
-
-          <motion.h1
-            variants={item}
-            className="text-foreground text-5xl leading-[0.95] font-semibold tracking-[-0.045em] sm:text-7xl lg:text-[88px]"
+        ))}
+        {visible >= logItems.length && (
+          <motion.span
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-[#FF7A00] font-medium"
           >
-            Build reliable
-            <br />
-            <span className="text-[#FF7A00]">AI agents</span> with TypeScript.
-          </motion.h1>
-
-          <motion.p
-            variants={item}
-            className="text-muted-foreground mx-auto mt-8 max-w-2xl text-lg leading-8"
-          >
-            A TypeScript-first runtime for building AI agents with tools, providers,
-            memory, and complete execution control.
-          </motion.p>
-
-          <motion.div
-            variants={item}
-            className="mt-10 flex flex-col justify-center gap-4 sm:flex-row"
-          >
-            <Link
-              href="#get-started"
-              className="focus-visible:ring-offset-background flex items-center justify-center gap-2 rounded-lg bg-[#FF7A00] px-6 py-3 font-medium text-white transition-colors duration-200 hover:bg-[#FF8C1A] focus-visible:ring-2 focus-visible:ring-[#FF7A00]/50 focus-visible:ring-offset-2 focus-visible:outline-none"
-            >
-              Start building
-              <ArrowRight size={18} />
-            </Link>
-
-            <Link
-              href="#architecture"
-              className="border-border text-foreground focus-visible:ring-offset-background flex items-center justify-center gap-2 rounded-lg border px-6 py-3 font-medium transition-colors duration-200 hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:outline-none"
-            >
-              <Code2 size={18} />
-              Architecture
-            </Link>
-          </motion.div>
-        </div>
-
-        {/* Runtime preview — a real trace, not just a code snippet */}
-        <motion.div variants={item} className="relative mx-auto mt-20 max-w-4xl">
-          <div className="agni-glow pointer-events-none absolute inset-x-0 top-1/2 -z-10 h-[300px] -translate-y-1/2 rounded-full opacity-30 blur-3xl" />
-
-          <div className="border-border bg-card overflow-hidden rounded-xl border shadow-[0_30px_100px_-40px_rgba(255,122,0,0.25)]">
-            {/* Editor Header */}
-
-            <div className="border-border bg-muted/30 relative flex items-center justify-between border-b px-4 py-3">
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
-                <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/70" />
-                <span className="h-2.5 w-2.5 rounded-full bg-green-400/70" />
-              </div>
-
-              <div className="absolute left-1/2 flex -translate-x-1/2 items-center gap-6 font-mono text-xs">
-                <span className="text-foreground border-b border-[#FF7A00] pb-3">
-                  agent.ts
-                </span>
-
-                <span className="text-muted-foreground">runtime.trace</span>
-              </div>
-
-              <div className="border-border bg-background/50 text-muted-foreground flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] tracking-wider uppercase">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#FF7A00]" />
-                running
-              </div>
-            </div>
-
-            {/* Code Area */}
-
-            <div className="flex font-mono text-[13px] leading-7">
-              <div className="border-border text-muted-foreground/50 border-r px-4 py-6 text-right select-none">
-                {Array.from({ length: 14 }).map((_, i) => (
-                  <div key={i}>{String(i + 1).padStart(2, '0')}</div>
-                ))}
-              </div>
-
-              <pre className="text-foreground overflow-x-auto p-6 text-left">
-                <code>
-                  <span className="text-muted-foreground">const</span>{' '}
-                  <span className="text-foreground">agent</span>{' '}
-                  <span className="text-muted-foreground">=</span>{' '}
-                  <span className="text-muted-foreground">new</span>{' '}
-                  <span className="text-[#FF7A00]">Agent</span>
-                  <span>{'({'}</span>
-                  {'\n  '}
-                  <span className="text-muted-foreground">name:</span>{' '}
-                  <span className="text-emerald-500">&quot;assistant&quot;</span>
-                  {'\n\n  '}
-                  <span className="text-muted-foreground">provider:</span>{' '}
-                  <span className="text-muted-foreground">new</span>{' '}
-                  <span className="text-[#FF7A00]">GeminiProvider</span>
-                  <span>()</span>
-                  {'\n\n  '}
-                  <span className="text-muted-foreground">tools:</span>{' '}
-                  <span>[ searchTool ]</span>
-                  {'\n'}
-                  <span>{'});'}</span>
-                  {'\n\n'}
-                  <span className="text-muted-foreground">const</span> <span>result</span>{' '}
-                  <span className="text-muted-foreground">=</span>{' '}
-                  <span className="text-muted-foreground">await</span>{' '}
-                  <span className="text-[#FF7A00]">runner</span>
-                  <span>.run(</span>
-                  {'\n  '}
-                  <span>agent</span>
-                  {'\n'}
-                  <span>);</span>
-                </code>
-              </pre>
-            </div>
-
-            {/* Runtime Trace */}
-
-            <div className="border-border bg-muted/20 border-t px-6 py-4 font-mono text-xs">
-              <div className="space-y-2">
-                <p className="text-muted-foreground">
-                  <span className="text-[#FF7A00]">→</span> agent initialized
-                </p>
-
-                <p className="text-muted-foreground">
-                  <span className="text-[#FF7A00]">→</span> tool_call: searchTool
-                </p>
-
-                <p className="text-muted-foreground">
-                  <span className="text-[#FF7A00]">→</span> tool_result: 6 sources found
-                </p>
-
-                <p className="text-foreground">
-                  <span className="text-[#FF7A00]">✓</span> completed in 842ms
-                </p>
-              </div>
-            </div>
-
-            <TracePlayback />
-          </div>
-        </motion.div>
-      </motion.div>
-    </section>
+            ✓ done
+          </motion.span>
+        )}
+        {visible < logItems.length && visible > 0 && (
+          <span className="ml-1 h-2.5 w-[2px] animate-pulse bg-[#FF7A00]" />
+        )}
+      </div>
+    </div>
   );
 }
