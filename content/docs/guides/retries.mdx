@@ -43,7 +43,7 @@ Avoid retrying permanent failures such as:
 Agni includes a retry utility that can be used around provider calls.
 
 ```ts
-import { retry } from 'agni-sdk';
+import { retry } from 'agni-agent-sdk';
 
 const response = await retry(() => provider.generate(request), {
   attempts: 3,

@@ -23,7 +23,7 @@ Agni treats memory as a separate runtime capability instead of coupling it direc
 ## Import
 
 ```ts
-import type { Memory } from 'agni-sdk';
+import type { Memory } from 'agni-agent-sdk';
 ```
 
 ---
@@ -194,7 +194,7 @@ Useful for:
 Example:
 
 ```ts
-import { InMemorySession } from 'agni-sdk';
+import { InMemorySession } from 'agni-agent-sdk';
 
 const memory = new InMemorySession();
 ```
@@ -214,7 +214,7 @@ Useful for:
 Example:
 
 ```ts
-import { SQLiteSession } from 'agni-sdk';
+import { SQLiteSession } from 'agni-agent-sdk';
 
 const memory = new SQLiteSession({
   database: './agent.db',
@@ -236,7 +236,7 @@ Useful for:
 Example:
 
 ```ts
-import { RedisSession } from 'agni-sdk';
+import { RedisSession } from 'agni-agent-sdk';
 
 const memory = new RedisSession({
   url: process.env.REDIS_URL,

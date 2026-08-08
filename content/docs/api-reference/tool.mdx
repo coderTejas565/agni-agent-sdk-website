@@ -1,28 +1,34 @@
 ---
+
 title: Tool
-description: Extend agents with custom capabilities using tools.
----
+description: Define actions that Agni agents can execute safely with context and guardrails.
+--------------------------------------------------------------------------------------------
 
 # Tool
 
-A `Tool` allows an Agni agent to interact with external systems and execute custom logic.
+A `Tool` allows an Agni agent to interact with external systems and execute custom application logic.
 
-Tools enable agents to perform actions beyond text generation, such as:
+Tools enable agents to perform actions such as:
 
-- Calling APIs
-- Querying databases
-- Reading files
-- Executing business logic
-- Accessing application services
+* Calling APIs
+* Querying databases
+* Reading files
+* Executing business logic
+* Accessing application services
 
-A tool is a function exposed to the model with a structured input schema.
+A tool contains:
+
+* Metadata exposed to the model
+* An input parameter schema
+* Execution logic
+* Access to the current `RunContext`
 
 ---
 
 ## Import
 
 ```ts
-import type { Tool } from 'agni-sdk';
+import type { Tool } from 'agni-agent-sdk';
 ```
 
 ---
@@ -33,61 +39,64 @@ During execution, Agni manages the complete tool lifecycle.
 
 ```text
 User Input
-
     |
-
     v
-
   Runner
-
     |
-
     v
-
  Provider
-
     |
-
     v
-
 Tool Selection
-
     |
-
     v
-
-Tool Execution
-
+ToolGuardrail
     |
-
+    | allowed
     v
-
+ToolExecutor
+    |
+    v
+   Tool
+ execute()
+    |
+    v
 Tool Result
-
     |
-
     v
-
+ToolGuardrail
+    |
+    v
+ Provider
+    |
+    v
 Final Response
 ```
 
-The agent decides **when** a tool is required.
+The model decides **when** a tool is required.
 
-The runtime manages **how** the tool executes.
+The Agni runtime controls **how** the tool executes.
 
 ---
 
 # Type Definition
 
 ```ts
-interface Tool {
+interface Tool<
+  TContext = unknown,
+  TInput = unknown,
+  TOutput = unknown,
+> {
   name: string;
 
   description: string;
 
-  parameters: ToolSchema;
+  parameters: unknown;
 
-  execute(args: unknown, context?: RunContext): Promise<unknown>;
+  execute(
+    input: TInput,
+    context: RunContext<TContext>,
+  ): TOutput | Promise<TOutput>;
 }
 ```
 
@@ -115,6 +124,12 @@ Example:
 'get_weather';
 ```
 
+The name should be:
+
+* Unique
+* Descriptive
+* Stable
+
 ---
 
 ## `description`
@@ -131,19 +146,21 @@ tool.description;
 string;
 ```
 
-The description helps the model decide when to use the tool.
+The description is exposed to the model and helps it decide when the tool should be used.
 
 Example:
 
 ```ts
-description: 'Returns the weather for a city.';
+description: 'Returns the current weather for a city.';
 ```
+
+A clear description improves tool selection.
 
 ---
 
 ## `parameters`
 
-Defines the input schema expected by the tool.
+Defines the input schema exposed to the model.
 
 ```ts
 tool.parameters;
@@ -152,33 +169,25 @@ tool.parameters;
 **Type**
 
 ```ts
-ToolSchema;
+unknown;
 ```
 
-Agni uses this schema to describe tool arguments to the model.
+The runtime keeps the schema provider-agnostic. Provider adapters convert it into the format required by the model provider.
 
 Example:
 
 ```ts
 {
-  type: "object",
+  type: 'object',
 
   properties: {
-
     city: {
-
-      type: "string",
-
-      description:
-        "City name"
-
-    }
-
+      type: 'string',
+      description: 'City name',
+    },
   },
 
-  required: [
-    "city"
-  ]
+  required: ['city'],
 }
 ```
 
@@ -186,19 +195,29 @@ Example:
 
 ## `execute()`
 
-The function called when the tool is executed.
+The function called when the runtime executes the tool.
 
 ```ts
-tool.execute(args);
+tool.execute(input, context);
 ```
 
 **Type**
 
 ```ts
-(args: unknown) => Promise<unknown>;
+(
+  input: TInput,
+  context: RunContext<TContext>,
+) => TOutput | Promise<TOutput>;
 ```
 
-The return value is sent back to the model.
+The tool receives two arguments:
+
+| Argument  | Description                      |
+| --------- | -------------------------------- |
+| `input`   | Arguments generated for the tool |
+| `context` | Current Agni execution context   |
+
+The returned value becomes the tool result available to the agent.
 
 ---
 
@@ -207,7 +226,7 @@ The return value is sent back to the model.
 Example:
 
 ```ts
-import type { Tool } from 'agni-sdk';
+import type { Tool } from 'agni-agent-sdk';
 
 export const weatherTool: Tool = {
   name: 'get_weather',
@@ -220,7 +239,6 @@ export const weatherTool: Tool = {
     properties: {
       city: {
         type: 'string',
-
         description: 'City name',
       },
     },
@@ -228,12 +246,12 @@ export const weatherTool: Tool = {
     required: ['city'],
   },
 
-  async execute({ city }) {
+  async execute(input, context) {
+    const { city } = input as { city: string };
+
     return {
       city,
-
       temperature: 29,
-
       condition: 'Sunny',
     };
   },
@@ -258,76 +276,303 @@ const agent = new Agent({
 });
 ```
 
+The `Runner` registers the agent's tools with its internal `ToolRegistry`.
+
 ---
 
-# Running a tool-enabled agent
+# Tool Registry
+
+Agni uses `ToolRegistry` to manage tools during execution.
+
+```ts
+import { ToolRegistry } from 'agni-agent-sdk';
+```
+
+The registry is responsible for:
+
+* Registering tools
+* Looking up tools by name
+* Checking whether a tool exists
+* Removing tools
+* Generating provider tool definitions
+
+The registry does **not** execute tools.
+
+Tool execution belongs to `ToolExecutor`.
+
+---
+
+# Tool execution
+
+`ToolExecutor` is responsible for executing a registered tool.
+
+```text
+Provider
+    |
+    v
+Tool Call
+    |
+    v
+ToolRegistry
+    |
+    v
+ToolExecutor
+    |
+    v
+Tool
+```
+
+The executor:
+
+1. Resolves the tool from the registry.
+2. Passes the input and `RunContext` to the tool.
+3. Executes the tool.
+4. Normalizes execution failures.
+5. Returns a structured execution result.
+
+---
+
+# Tool execution result
+
+The executor returns a discriminated union.
+
+### Successful execution
+
+```ts
+{
+  success: true,
+
+  output: result,
+}
+```
+
+### Failed execution
+
+```ts
+{
+  success: false,
+
+  error: Error,
+}
+```
+
+This allows the runtime to handle tool failures without relying on exceptions for normal control flow.
+
+---
+
+# Tool Guardrails
+
+Agni supports guardrails around tool execution.
+
+A tool guardrail can inspect a tool call **before execution** and its result **after execution**.
+
+```ts
+interface ToolGuardrail<TContext = unknown> {
+  name: string;
+
+  beforeExecute?(
+    toolName: string,
+    input: unknown,
+    context: RunContext<TContext>,
+  ): ToolGuardrailResult | Promise<ToolGuardrailResult>;
+
+  afterExecute?(
+    toolName: string,
+    output: unknown,
+    context: RunContext<TContext>,
+  ): ToolGuardrailResult | Promise<ToolGuardrailResult>;
+}
+```
+
+A guardrail returns:
+
+```ts
+interface ToolGuardrailResult {
+  allowed: boolean;
+
+  reason?: string;
+}
+```
+
+---
+
+# Guardrail execution flow
+
+The intended tool execution flow is:
+
+```text
+Tool Call
+    |
+    v
+beforeExecute()
+    |
+    +---- allowed ----> ToolExecutor
+    |                       |
+    |                       v
+    |                   tool.execute()
+    |                       |
+    |                       v
+    |                  afterExecute()
+    |                       |
+    |                       v
+    |                   Tool Result
+    |
+    +---- blocked ----> ToolGuardrailError
+```
+
+This allows applications to enforce policies before a tool is executed and inspect the result afterward.
+
+---
+
+# ToolGuardrailError
+
+When a tool execution is rejected by a guardrail, Agni represents the failure using `ToolGuardrailError`.
+
+```ts
+import { ToolGuardrailError } from 'agni-agent-sdk';
+```
+
+`ToolGuardrailError` extends `GuardrailError`, which extends `AgniError`.
+
+It contains:
+
+```ts
+error.toolName;
+error.guardrailName;
+error.code;
+error.message;
+error.metadata;
+error.retryable;
+```
+
+The error code is:
+
+```ts
+'GUARDRAIL_ERROR';
+```
+
+Example:
+
+```ts
+throw new ToolGuardrailError(
+  'Tool execution was blocked by policy.',
+  {
+    toolName: 'delete_account',
+    guardrailName: 'destructive-action-policy',
+  },
+);
+```
+
+---
+
+# Handling tool guardrail failures
+
+Guardrail failures are returned through `RunResult`.
 
 ```ts
 const result = await runner.run(
   agent,
 
-  'What is the weather in Pune?',
+  'Delete my account',
 
   {
     context: {},
   },
 );
 
-console.log(result.output);
+if (!result.success) {
+  console.log(result.error.code);
+}
 ```
 
-Example output:
+A guardrail-blocked failure can be identified from the error code and metadata.
 
-```text
-The weather in Pune today is Sunny
-with a temperature of 29 degrees Celsius.
+```ts
+if (!result.success) {
+  if (result.error.code === 'GUARDRAIL_ERROR') {
+    console.log('Tool execution was blocked.');
+  }
+}
 ```
 
 ---
 
-# Tool execution lifecycle
+# Tool errors
 
-When a model requests a tool:
+Tool execution failures are normalized by `ToolExecutor`.
 
-```text
-1. User sends request
+For example:
 
-        |
+```ts
+const databaseTool: Tool = {
+  name: 'get_user',
 
-        v
+  description: 'Fetches a user from the database.',
 
-2. Model decides tool is required
+  parameters: {
+    type: 'object',
 
-        |
+    properties: {
+      userId: {
+        type: 'string',
+      },
+    },
 
-        v
+    required: ['userId'],
+  },
 
-3. Runner validates tool
+  async execute() {
+    throw new Error('Database unavailable');
+  },
+};
+```
 
-        |
+The runtime converts unexpected tool failures into:
 
-        v
+```ts
+ToolExecutionError
+```
 
-4. Tool execute() runs
+with the error code:
 
-        |
+```ts
+'TOOL_EXECUTION_ERROR';
+```
 
-        v
+---
 
-5. Result returned to model
+# Tool not found
 
-        |
+If the model requests a tool that is not registered, `ToolExecutor` returns a `ToolNotFoundError`.
 
-        v
+```ts
+ToolNotFoundError
+```
 
-6. Final response generated
+with the error code:
+
+```ts
+'TOOL_NOT_FOUND';
+```
+
+Example:
+
+```ts
+{
+  success: false,
+
+  error: {
+    code: 'TOOL_NOT_FOUND',
+    message: 'Tool "get_weather" not found.',
+  },
+}
 ```
 
 ---
 
 # Accessing RunContext
 
-Tools can access execution context.
+Tools receive the current execution context.
 
 Example:
 
@@ -335,7 +580,7 @@ Example:
 const profileTool: Tool = {
   name: 'get_profile',
 
-  description: 'Returns user profile.',
+  description: 'Returns the current user profile.',
 
   parameters: {
     type: 'object',
@@ -343,8 +588,8 @@ const profileTool: Tool = {
     properties: {},
   },
 
-  async execute(_args, context) {
-    const userId = context?.context.userId;
+  async execute(_input, context) {
+    const userId = context.context.userId;
 
     return {
       userId,
@@ -353,25 +598,44 @@ const profileTool: Tool = {
 };
 ```
 
+`RunContext` allows tools to access application-specific runtime information without coupling the tool to the Runner.
+
 ---
 
-# Tool errors
+# Tool execution lifecycle
 
-Tool failures are captured by the runtime.
+When a model requests a tool, the runtime follows this flow:
 
-Example:
-
-```ts
-async execute() {
-
-  throw new Error(
-    "Database unavailable"
-  );
-
-}
+```text
+1. Provider requests a tool
+        |
+        v
+2. Runner receives the tool call
+        |
+        v
+3. Tool is resolved from ToolRegistry
+        |
+        v
+4. Tool guardrail checks the request
+        |
+        +---- blocked ----> ToolGuardrailError
+        |
+        v
+5. ToolExecutor executes the tool
+        |
+        +---- failed ----> ToolExecutionError
+        |
+        v
+6. Post-execution guardrail checks result
+        |
+        +---- blocked ----> ToolGuardrailError
+        |
+        v
+7. Tool result added to conversation
+        |
+        v
+8. Provider generates next response
 ```
-
-The error is handled by Agni and returned through the execution result.
 
 ---
 
@@ -390,6 +654,8 @@ Avoid:
 ```text
 do_everything()
 ```
+
+A focused tool is easier for the model to understand and safer to execute.
 
 ---
 
@@ -410,13 +676,13 @@ Instead of:
 "The temperature is 29 degrees."
 ```
 
-Structured outputs allow the model to reason better.
+Structured outputs make tool results easier for the model and application code to consume.
 
 ---
 
 ## Write clear descriptions
 
-The model uses descriptions to decide tool selection.
+The model uses tool descriptions when deciding which tool to call.
 
 Good:
 
@@ -432,10 +698,42 @@ Search tool.
 
 ---
 
+## Protect sensitive operations
+
+Use guardrails for operations that can:
+
+* Delete data
+* Modify accounts
+* Make financial changes
+* Send external messages
+* Trigger irreversible actions
+
+For example:
+
+```text
+Model
+  |
+  v
+delete_account
+  |
+  v
+Destructive Action Guardrail
+  |
+  +---- blocked
+  |
+  +---- allowed
+         |
+         v
+    Execute Tool
+```
+
+---
+
 # Related
 
-- [`Agent`](/docs/api-reference/agent)
-- [`Runner`](/docs/api-reference/runner)
-- [`Provider`](/docs/api-reference/provider)
-- [`RunContext`](/docs/api-reference/run-context)
-- [`Custom Tools Guide`](/docs/guides/custom-tools)
+* [`Agent`](/docs/api-reference/agent)
+* [`Runner`](/docs/api-reference/runner)
+* [`RunContext`](/docs/api-reference/run-context)
+* [`RunResult`](/docs/api-reference/run-result)
+* [`Error`](/docs/api-reference/error)
+* [`Custom Tools Guide`](/docs/guides/custom-tools)

@@ -32,7 +32,7 @@ chat-agent/
 ## Install
 
 ```bash
-pnpm add agni-sdk
+pnpm add agni-agent-sdk
 ```
 
 ---
@@ -50,7 +50,7 @@ GEMINI_API_KEY=your_api_key
 ```ts
 import 'dotenv/config';
 
-import { Agent, Runner, GeminiProvider } from 'agni-sdk';
+import { Agent, Runner, GeminiProvider } from 'agni-agent-sdk';
 
 const provider = new GeminiProvider({
   apiKey: process.env.GEMINI_API_KEY!,

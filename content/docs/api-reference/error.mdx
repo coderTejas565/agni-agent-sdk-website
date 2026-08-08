@@ -1,215 +1,444 @@
 ---
+
 title: Error
-description: Understand and handle errors returned by Agni runtime.
----
+description: Understand and handle errors returned by the Agni runtime.
+-----------------------------------------------------------------------
 
 # Error
 
-Agni uses a structured error system to make agent failures predictable and debuggable.
+Agni uses a structured error system to make agent failures predictable, debuggable, and machine-readable.
 
-Errors can occur during:
+The error system currently covers:
 
-- Agent execution
-- Provider communication
-- Tool execution
-- Validation
-- Runtime limits
+* Base Agni errors
+* Provider errors
+* Tool errors
+* Validation errors
+* Guardrail errors
+* Configuration errors
+* Runtime execution limits
 
-All runtime errors follow a consistent format.
+Agni separates **internal error objects** from the **serializable errors returned through `RunResult`**.
 
 ---
 
 ## Import
 
 ```ts
-import type { AgniError } from 'agni-sdk';
+import {
+  AgniError,
+  ProviderError,
+  ProviderAuthenticationError,
+  ProviderRateLimitError,
+  ProviderTimeoutError,
+  ProviderResponseError,
+  ToolNotFoundError,
+  ToolExecutionError,
+  ToolValidationError,
+  ToolRegistrationError,
+  ValidationError,
+  AgentValidationError,
+  RunValidationError,
+  GuardrailError,
+  InputGuardrailError,
+  ToolGuardrailError,
+  OutputGuardrailError,
+  ConfigurationError,
+  MissingConfigurationError,
+  InvalidConfigurationError,
+} from 'agni-agent-sdk';
 ```
 
 ---
 
-# Error model
+# Error architecture
 
-Every Agni error contains:
+All Agni runtime errors extend the base `AgniError` class.
+
+```text
+AgniError
+│
+├── ProviderError
+│   ├── ProviderAuthenticationError
+│   ├── ProviderRateLimitError
+│   ├── ProviderTimeoutError
+│   └── ProviderResponseError
+│
+├── ToolNotFoundError
+├── ToolExecutionError
+├── ToolValidationError
+├── ToolRegistrationError
+│
+├── ValidationError
+│   ├── AgentValidationError
+│   └── RunValidationError
+│
+├── GuardrailError
+│   ├── InputGuardrailError
+│   ├── ToolGuardrailError
+│   └── OutputGuardrailError
+│
+└── ConfigurationError
+    ├── MissingConfigurationError
+    └── InvalidConfigurationError
+```
+
+This hierarchy allows applications to handle errors at different levels of specificity.
+
+For example:
 
 ```ts
-interface AgniError {
-  code: string;
+if (error instanceof ProviderError) {
+  // Handle all provider failures
+}
+```
 
-  message: string;
+or:
 
-  details?: unknown;
+```ts
+if (error instanceof ProviderRateLimitError) {
+  // Handle rate limiting specifically
 }
 ```
 
 ---
 
-# Properties
+# AgniError
+
+`AgniError` is the base error class for the Agni runtime.
+
+```ts
+class AgniError extends Error {
+  readonly code: string;
+  readonly metadata?: Record<string, unknown>;
+  readonly cause?: unknown;
+  readonly retryable: boolean;
+}
+```
+
+Every Agni-specific error inherits these properties.
+
+---
 
 ## `code`
 
-Machine-readable error identifier.
+A stable machine-readable identifier for the error.
 
 ```ts
 error.code;
 ```
 
-**Type**
-
-```ts
-string;
-```
-
-Use error codes for:
-
-- Conditional handling
-- Logging
-- Monitoring
-- Analytics
-
 Example:
 
 ```ts
-'PROVIDER_ERROR';
+'PROVIDER_RATE_LIMIT_ERROR';
 ```
+
+Error codes should be used for:
+
+* Conditional handling
+* Logging
+* Monitoring
+* Analytics
+* Retry decisions
+
+Do not rely on the human-readable error message for program logic.
 
 ---
 
-## `message`
+## `metadata`
 
-Human-readable explanation of the failure.
-
-```ts
-error.message;
-```
-
-Example:
-
-```text
-Unable to generate response from provider.
-```
-
----
-
-## `details`
-
-Additional debugging information.
+Optional debugging and contextual information.
 
 ```ts
-error.details;
+error.metadata;
 ```
-
-This field is optional and depends on the error type.
 
 Example:
 
 ```ts
 {
-  provider:
-    "gemini",
-
-  reason:
-    "invalid_api_key"
+  provider: 'gemini',
+  model: 'gemini-2.5-flash'
 }
 ```
 
+Metadata is intended to provide additional context without changing the stable error code.
+
 ---
 
-# Handling errors
+## `cause`
 
-Errors are returned through `RunResult`.
+The original underlying error, when available.
 
 ```ts
-const result = await runner.run(
-  agent,
+error.cause;
+```
 
-  'Explain AI agents',
+This is useful when Agni wraps an error thrown by a provider, tool, or another runtime component.
 
-  {
-    context: {},
-  },
-);
+Example:
 
-if (!result.success) {
-  console.error(result.error);
+```ts
+try {
+  // provider operation
+} catch (error) {
+  throw new ProviderError('Provider request failed.', {
+    cause: error,
+  });
 }
 ```
 
 ---
 
-# Error codes
+## `retryable`
 
-Agni uses specific error codes for common failure scenarios.
+Indicates whether retrying the operation may succeed.
 
-| Code               | Description                    |
-| ------------------ | ------------------------------ |
-| `PROVIDER_ERROR`   | AI provider request failed     |
-| `TOOL_ERROR`       | Tool execution failed          |
-| `VALIDATION_ERROR` | Invalid input or configuration |
-| `RUNTIME_ERROR`    | Internal runtime failure       |
-| `LIMIT_ERROR`      | Execution limit exceeded       |
+```ts
+error.retryable;
+```
+
+Example:
+
+```ts
+if (error.retryable) {
+  // Retry according to your application's policy
+}
+```
+
+Agni marks errors such as provider rate limits and provider timeouts as retryable.
 
 ---
 
 # Provider errors
 
-Provider errors occur when communication with an AI model fails.
+Provider errors represent failures originating from an AI model provider.
+
+The base class is:
+
+```ts
+ProviderError
+```
+
+Provider errors contain optional provider and model information.
+
+```ts
+const error = new ProviderError(
+  'Provider request failed.',
+  {
+    provider: 'gemini',
+    model: 'gemini-2.5-flash',
+  },
+);
+```
+
+---
+
+## ProviderAuthenticationError
+
+Used when provider authentication fails.
 
 Common causes:
 
-- Invalid API key
-- Rate limiting
-- Provider downtime
-- Unsupported request
-
-Example:
+* Invalid API key
+* Expired credentials
+* Missing credentials
+* Invalid authentication configuration
 
 ```ts
-{
-  success: false,
-
-  error: {
-
-    code:
-      "PROVIDER_ERROR",
-
-    message:
-      "Authentication failed."
-
-  }
-}
+new ProviderAuthenticationError(
+  'Provider authentication failed.',
+  {
+    provider: 'gemini',
+  },
+);
 ```
+
+Code:
+
+```text
+PROVIDER_AUTHENTICATION_ERROR
+```
+
+This error is **not retryable** by default.
+
+---
+
+## ProviderRateLimitError
+
+Used when a provider rejects a request because a rate limit has been reached.
+
+```ts
+new ProviderRateLimitError(
+  'Provider rate limit exceeded.',
+  {
+    provider: 'gemini',
+    retryAfter: 30,
+  },
+);
+```
+
+Code:
+
+```text
+PROVIDER_RATE_LIMIT_ERROR
+```
+
+This error is marked as **retryable**.
+
+The optional `retryAfter` value can be used by an application-level retry strategy.
+
+---
+
+## ProviderTimeoutError
+
+Used when a provider request exceeds its allowed execution time.
+
+```ts
+new ProviderTimeoutError(
+  'Provider request timed out.',
+  {
+    provider: 'gemini',
+  },
+);
+```
+
+Code:
+
+```text
+PROVIDER_TIMEOUT_ERROR
+```
+
+This error is marked as **retryable**.
+
+---
+
+## ProviderResponseError
+
+Used when the provider returns an invalid or malformed response.
+
+```ts
+new ProviderResponseError(
+  'Invalid provider response.',
+  {
+    provider: 'gemini',
+  },
+);
+```
+
+Code:
+
+```text
+PROVIDER_RESPONSE_ERROR
+```
+
+This error is not retryable by default.
 
 ---
 
 # Tool errors
 
-Tool errors happen when a registered tool fails during execution.
+Tool errors represent failures involving agent tools.
 
-Example:
+---
+
+## ToolNotFoundError
+
+Thrown when the runtime attempts to execute a tool that is not registered.
 
 ```ts
-const weatherTool = {
-  async execute() {
-    throw new Error('API unavailable');
-  },
-};
+new ToolNotFoundError('get_weather');
 ```
 
-Result:
+Code:
+
+```text
+TOOL_NOT_FOUND
+```
+
+The error metadata contains the tool name:
 
 ```ts
 {
-  success: false,
+  toolName: 'get_weather'
+}
+```
 
-  error: {
+---
 
-    code:
-      "TOOL_ERROR",
+## ToolExecutionError
 
-    message:
-      "Tool execution failed."
+Represents a failure while executing tool logic.
 
-  }
+```ts
+new ToolExecutionError(
+  'Weather API request failed.',
+  {
+    toolName: 'get_weather',
+  },
+  originalError,
+);
+```
+
+Code:
+
+```text
+TOOL_EXECUTION_ERROR
+```
+
+The original error can be accessed through:
+
+```ts
+error.cause;
+```
+
+---
+
+## ToolValidationError
+
+Used when tool input validation fails.
+
+```ts
+new ToolValidationError(
+  'Invalid tool input.',
+  {
+    toolName: 'get_weather',
+  },
+);
+```
+
+Code:
+
+```text
+TOOL_VALIDATION_ERROR
+```
+
+---
+
+## ToolRegistrationError
+
+Used when a tool cannot be registered correctly.
+
+For example, registering the same tool name twice:
+
+```ts
+registry.register(weatherTool);
+
+registry.register(weatherTool);
+```
+
+The second registration results in:
+
+```text
+TOOL_REGISTRATION_ERROR
+```
+
+Example metadata:
+
+```ts
+{
+  toolName: 'get_weather'
 }
 ```
 
@@ -217,61 +446,369 @@ Result:
 
 # Validation errors
 
-Validation errors occur when runtime inputs are invalid.
+Validation errors represent invalid input or runtime configuration.
+
+The base class is:
+
+```ts
+ValidationError
+```
+
+---
+
+## AgentValidationError
+
+Used when an agent configuration is invalid.
+
+Examples include:
+
+* Invalid agent configuration
+* Missing provider
+* Invalid execution limits
+
+```ts
+new AgentValidationError(
+  'Invalid agent configuration.',
+);
+```
+
+Code:
+
+```text
+VALIDATION_ERROR
+```
+
+---
+
+## RunValidationError
+
+Used when runtime execution input is invalid.
+
+Examples include:
+
+* Invalid run input
+* Invalid runtime options
+* Invalid run context
+
+```ts
+new RunValidationError(
+  'Invalid run configuration.',
+);
+```
+
+Code:
+
+```text
+VALIDATION_ERROR
+```
+
+---
+
+# Guardrail errors
+
+Guardrail errors represent execution being rejected by a configured safety or policy guardrail.
+
+The base class is:
+
+```ts
+GuardrailError
+```
+
+Guardrail failures are **not retryable** by default.
+
+---
+
+## InputGuardrailError
+
+Used when user or agent input is rejected.
 
 Examples:
 
-- Missing required configuration
-- Invalid tool schema
-- Incorrect parameters
+* Unsafe input
+* Policy violation
+* Blocked content
+
+```ts
+new InputGuardrailError(
+  'Input was rejected by the configured guardrail.',
+);
+```
+
+Code:
+
+```text
+GUARDRAIL_ERROR
+```
+
+---
+
+## ToolGuardrailError
+
+Used when a tool execution is rejected by a tool guardrail.
+
+This error contains information about both the tool and the guardrail.
+
+```ts
+new ToolGuardrailError(
+  'Tool execution was blocked.',
+  {
+    toolName: 'delete_file',
+    guardrailName: 'protected-files',
+  },
+);
+```
+
+The error exposes:
+
+```ts
+error.toolName;
+error.guardrailName;
+```
 
 Example:
+
+```ts
+console.log(error.toolName);
+// delete_file
+
+console.log(error.guardrailName);
+// protected-files
+```
+
+Code:
+
+```text
+GUARDRAIL_ERROR
+```
+
+---
+
+## OutputGuardrailError
+
+Used when generated agent output is rejected by an output guardrail.
+
+Examples:
+
+* Output policy violation
+* Unsafe generated content
+* Restricted output
+
+```ts
+new OutputGuardrailError(
+  'Agent output was rejected by the configured guardrail.',
+);
+```
+
+Code:
+
+```text
+GUARDRAIL_ERROR
+```
+
+---
+
+# Configuration errors
+
+Configuration errors represent invalid or incomplete Agni configuration.
+
+The base class is:
+
+```ts
+ConfigurationError
+```
+
+---
+
+## MissingConfigurationError
+
+Used when required configuration is missing.
+
+Examples:
+
+* Missing API key
+* Missing provider configuration
+* Missing required environment variable
+
+```ts
+new MissingConfigurationError(
+  'Gemini API key is missing.',
+);
+```
+
+Code:
+
+```text
+CONFIGURATION_ERROR
+```
+
+---
+
+## InvalidConfigurationError
+
+Used when a configuration value is present but invalid.
+
+Examples:
+
+* Invalid model name
+* Invalid timeout
+* Invalid runtime option
+
+```ts
+new InvalidConfigurationError(
+  'Invalid model configuration.',
+);
+```
+
+Code:
+
+```text
+CONFIGURATION_ERROR
+```
+
+---
+
+# RunResult errors
+
+`Runner.run()` returns a structured `RunResult`.
+
+Expected runtime failures are represented as:
 
 ```ts
 {
   success: false,
 
   error: {
+    code: 'PROVIDER_ERROR',
+    message: 'Provider request failed.',
+    metadata: {},
+    retryable: false,
+  },
 
-    code:
-      "VALIDATION_ERROR"
+  metadata: {
+    runId: 'run_123',
+    turns: 2,
+  },
+}
+```
 
+The `error` returned in `RunResult` is intentionally serializable.
+
+The internal `AgniError` instance contains richer information such as:
+
+```ts
+error.cause;
+```
+
+but the public `RunResult.error` contains the structured information required by applications.
+
+---
+
+# Error codes
+
+The runtime currently defines these error codes:
+
+| Code                            | Description                                 |
+| ------------------------------- | ------------------------------------------- |
+| `AGNI_ERROR`                    | Base Agni error                             |
+| `PROVIDER_ERROR`                | General provider failure                    |
+| `PROVIDER_AUTHENTICATION_ERROR` | Provider authentication failed              |
+| `PROVIDER_RATE_LIMIT_ERROR`     | Provider rate limit exceeded                |
+| `PROVIDER_TIMEOUT_ERROR`        | Provider request timed out                  |
+| `PROVIDER_RESPONSE_ERROR`       | Provider returned an invalid response       |
+| `TOOL_NOT_FOUND`                | Requested tool is not registered            |
+| `TOOL_EXECUTION_ERROR`          | Tool execution failed                       |
+| `TOOL_VALIDATION_ERROR`         | Tool input validation failed                |
+| `TOOL_REGISTRATION_ERROR`       | Tool registration failed                    |
+| `VALIDATION_ERROR`              | Runtime validation failed                   |
+| `GUARDRAIL_ERROR`               | Execution was rejected by a guardrail       |
+| `CANCELLED`                     | Execution was cancelled                     |
+| `MAX_TURNS_EXCEEDED`            | Agent exceeded the configured maximum turns |
+
+---
+
+# Handling errors
+
+The recommended approach is to check `success` before accessing the result.
+
+```ts
+const result = await runner.run(
+  agent,
+  'Explain AI agents',
+  {
+    context: {},
+  },
+);
+
+if (!result.success) {
+  console.error(result.error);
+
+  return;
+}
+
+console.log(result.output);
+```
+
+Because `RunResult` is a discriminated union, TypeScript automatically narrows the result.
+
+---
+
+# Handling by error code
+
+Use the stable error code when the application needs specific behavior.
+
+```ts
+if (!result.success) {
+  switch (result.error.code) {
+    case 'PROVIDER_RATE_LIMIT_ERROR':
+      // Retry with backoff
+      break;
+
+    case 'PROVIDER_TIMEOUT_ERROR':
+      // Retry the request
+      break;
+
+    case 'TOOL_NOT_FOUND':
+      // Investigate tool registration
+      break;
+
+    case 'GUARDRAIL_ERROR':
+      // Do not retry automatically
+      break;
+
+    case 'MAX_TURNS_EXCEEDED':
+      // Agent execution exceeded its limit
+      break;
   }
 }
 ```
 
 ---
 
-# Runtime limits
+# Retryable errors
 
-Agni can stop execution when runtime limits are reached.
-
-Examples:
-
-- Maximum turns exceeded
-- Timeout reached
-- Tool execution limit exceeded
-
-Example:
+Agni exposes a `retryable` property to help applications make retry decisions.
 
 ```ts
-{
-  success: false,
-
-  error: {
-
-    code:
-      "LIMIT_ERROR"
-
-  }
+if (!result.success && result.error.retryable) {
+  // Apply application-level retry policy
 }
 ```
+
+Currently, provider rate-limit and provider-timeout errors are marked as retryable.
+
+Applications should still apply their own retry policy, including:
+
+* Maximum retry attempts
+* Exponential backoff
+* Jitter
+* Request budgets
+* Idempotency considerations
 
 ---
 
 # Production error handling
 
-Recommended pattern:
+A production application should log the structured error rather than relying only on the message.
 
 ```ts
 const result = await runner.run(agent, input, {
@@ -281,10 +818,11 @@ const result = await runner.run(agent, input, {
 if (!result.success) {
   logger.error({
     code: result.error.code,
-
     message: result.error.message,
-
-    runId: result.metadata.runId,
+    metadata: result.error.metadata,
+    retryable: result.error.retryable,
+    runId: result.metadata?.runId,
+    turns: result.metadata?.turns,
   });
 
   return;
@@ -293,48 +831,50 @@ if (!result.success) {
 return result.output;
 ```
 
+The `runId` is particularly useful for connecting the error with runtime events.
+
 ---
 
 # Debugging workflow
 
-When an execution fails:
+When an agent execution fails, use the following workflow:
 
 ```text
-1. Check Run ID
-
-        |
-
-        v
-
-2. Inspect runtime events
-
-        |
-
-        v
-
-3. Identify failed component
-
-        |
-
-        v
-
-4. Handle based on error code
+RunResult
+   |
+   v
+Check error.code
+   |
+   v
+Check retryable
+   |
+   v
+Inspect error.metadata
+   |
+   v
+Find runId
+   |
+   v
+Inspect runtime events
 ```
 
-Use:
+For example:
 
-- `runId` from metadata
-- Runtime events
-- Error code
-- Error details
+```ts
+if (!result.success) {
+  console.log('Error:', result.error.code);
+  console.log('Retryable:', result.error.retryable);
+  console.log('Run ID:', result.metadata?.runId);
+}
+```
 
-to trace failures.
+This gives the application enough information to understand what failed without depending on fragile error-message strings.
 
 ---
 
 # Related
 
-- [`RunResult`](/docs/api-reference/run-result)
-- [`Runner`](/docs/api-reference/runner)
-- [`Events`](/docs/api-reference/events)
-- [`Tracing`](/docs/architecture/tracing)
+* [`RunResult`](/docs/api-reference/run-result)
+* [`Runner`](/docs/api-reference/runner)
+* [`Events`](/docs/api-reference/events)
+* [`Tools`](/docs/api-reference/tools)

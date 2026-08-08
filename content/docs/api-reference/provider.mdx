@@ -1,108 +1,125 @@
 ---
+
 title: Provider
-description: Connect Agni to language models through a provider abstraction.
----
+description: Connect Agni's runtime to AI model providers through a normalized provider interface.
+--------------------------------------------------------------------------------------------------
 
 # Provider
 
-A `Provider` connects Agni's runtime with an AI model.
+A Provider connects Agni's runtime with an AI model.
 
 Providers are responsible for:
 
-- Sending requests to language models
-- Normalizing model responses
-- Handling provider-specific communication
+* Sending requests to AI models
+* Translating Agni requests into provider-specific requests
+* Normalizing provider responses
+* Exposing provider and model metadata
+* Normalizing provider failures into Agni errors
 
-Agni separates the runtime from model providers, allowing agents to run with different AI models without changing application logic.
+Agni keeps the runtime independent from provider-specific APIs.
+
+This means the `Runner` does not need to know whether an agent uses Gemini, OpenAI, Anthropic, or a custom provider.
 
 ---
 
 ## Import
 
 ```ts
-import type { Provider } from 'agni-sdk';
+import type {
+  ModelProvider,
+  ProviderInfo,
+} from 'agni-agent-sdk';
 ```
 
 ---
 
 # Provider architecture
 
-Agni uses a provider abstraction layer.
+Agni uses a provider abstraction layer between the runtime and model APIs.
 
-Your application communicates with the runtime, not directly with model APIs.
-
-```
+```text
 Application
-
     |
-
     v
-
   Agent
-
     |
-
     v
-
- Runner
-
+  Runner
     |
-
     v
-
- Provider
-
+ModelProvider
     |
-
-    +----------------+
-
-    |                |
-
- Gemini          OpenAI
-
- Claude          Custom
-
-    |                |
-
-    +----------------+
-
+    +-------------------+
+    |                   |
+    v                   v
+ Gemini              Custom
+ Provider            Provider
+    |                   |
+    v                   v
+ Gemini API          Model API
+    |                   |
+    +-------------------+
             |
-
             v
-
-        AI Model
+    Normalized Response
 ```
+
+The runtime communicates with the `ModelProvider` interface rather than directly with a model SDK.
 
 ---
 
-# Interface
+# ModelProvider
 
-Every provider implements the `Provider` interface.
+The provider contract is defined by `ModelProvider`.
 
 ```ts
-interface Provider {
-  name: string;
+interface ModelProvider {
+  readonly info: ProviderInfo;
 
-  generate(request: ProviderRequest): Promise<ProviderResponse>;
+  generate(
+    request: ModelRequest,
+  ): Promise<ModelResponse>;
 }
 ```
 
 ---
 
-# Properties
+# ProviderInfo
 
-## `name`
-
-Identifier for the provider.
+Each provider exposes metadata describing the provider and configured model.
 
 ```ts
-provider.name;
+interface ProviderInfo {
+  name: string;
+
+  model: string;
+}
 ```
 
-**Type**
+Example:
 
 ```ts
-string;
+provider.info;
+```
+
+Result:
+
+```ts
+{
+  name: 'gemini',
+
+  model: 'gemini-2.5-flash',
+}
+```
+
+---
+
+## `info.name`
+
+Identifies the provider.
+
+```ts
+provider.info.name;
 ```
 
 Example:
@@ -111,108 +128,336 @@ Example:
 'gemini';
 ```
 
+This metadata is also included in runtime provider events.
+
 ---
 
-# Methods
+## `info.model`
 
-## `generate()`
+Identifies the configured model.
 
-Generates a response from the configured model.
+```ts
+provider.info.model;
+```
+
+Example:
+
+```ts
+'gemini-2.5-flash';
+```
+
+The Runner uses this information when emitting provider lifecycle events.
+
+---
+
+# `generate()`
+
+The `generate()` method sends a normalized model request to the provider.
 
 ```ts
 provider.generate(request);
 ```
 
+The provider converts the request into the format required by the underlying model API.
+
 ---
 
-## Parameters
+# ModelRequest
 
-### `request`
+Agni's runtime creates a normalized `ModelRequest`.
 
-The normalized model request created by Agni runtime.
+A request contains the conversation, available tools, and provider-specific options.
+
+Example:
 
 ```ts
-ProviderRequest;
+{
+  messages,
+
+  tools,
+
+  providerOptions,
+}
 ```
 
-Contains:
+The exact request type is:
 
-| Field          | Type        | Description          |
-| -------------- | ----------- | -------------------- |
-| `messages`     | `Message[]` | Conversation history |
-| `tools`        | `Tool[]`    | Available tools      |
-| `instructions` | `string`    | Agent instructions   |
-| `metadata`     | `object`    | Runtime metadata     |
+```ts
+ModelRequest
+```
+
+The provider receives this normalized structure instead of receiving the `Agent` directly.
 
 ---
 
-## Returns
+# Messages
 
-Returns a normalized provider response.
+The `messages` field contains the conversation history.
 
 ```ts
-Promise<ProviderResponse>;
+messages: Message[];
+```
+
+Messages can represent:
+
+* System instructions
+* User messages
+* Assistant responses
+* Tool calls
+* Tool results
+
+Example:
+
+```ts
+[
+  {
+    role: 'system',
+    content: 'You are a helpful assistant.',
+  },
+
+  {
+    role: 'user',
+    content: 'What is the weather in Pune?',
+  },
+]
+```
+
+The provider adapter converts these messages into its native API format.
+
+---
+
+# Tools
+
+The runtime passes registered tools to the provider.
+
+```ts
+tools: ProviderToolDefinition[];
+```
+
+A provider uses these definitions to expose available tools to the model.
+
+Example:
+
+```ts
+[
+  {
+    name: 'get_weather',
+
+    description: 'Returns the weather for a city.',
+
+    parameters: {
+      type: 'object',
+
+      properties: {
+        city: {
+          type: 'string',
+        },
+      },
+
+      required: ['city'],
+    },
+  },
+]
+```
+
+The provider adapter is responsible for converting these definitions into the provider-specific tool format.
+
+---
+
+# Provider options
+
+Provider-specific configuration can be passed through:
+
+```ts
+providerOptions;
+```
+
+This allows provider adapters to support provider-specific settings without coupling the core runtime to a particular model provider.
+
+For example:
+
+```ts
+const agent = new Agent({
+  name: 'assistant',
+
+  provider,
+
+  providerOptions: {
+    temperature: 0.7,
+  },
+});
+```
+
+The exact supported options depend on the provider implementation.
+
+---
+
+# ModelResponse
+
+Providers return a normalized `ModelResponse`.
+
+Agni currently supports responses such as:
+
+### Text response
+
+```ts
+{
+  type: 'text',
+
+  content: 'Hello, how can I help?',
+}
+```
+
+### Tool call response
+
+```ts
+{
+  type: 'tool_call',
+
+  toolCalls: [
+    {
+      id: 'call_123',
+
+      name: 'get_weather',
+
+      arguments: {
+        city: 'Pune',
+      },
+    },
+  ],
+}
+```
+
+The Runner uses the response type to determine the next step in the agent execution loop.
+
+---
+
+# Provider lifecycle
+
+During an agent run, the provider participates in the following lifecycle:
+
+```text
+Runner
+   |
+   v
+provider.request
+   |
+   v
+ModelProvider.generate()
+   |
+   v
+Provider Adapter
+   |
+   v
+Model API
+   |
+   v
+Provider Response
+   |
+   v
+provider.response
+   |
+   v
+Runner
+```
+
+The Runner emits provider events before and after the provider request.
+
+---
+
+# Runtime provider events
+
+The Runner emits:
+
+```ts
+'provider.request'
+```
+
+before calling the provider.
+
+Example event:
+
+```ts
+{
+  type: 'provider.request',
+
+  runId: 'run_123',
+
+  timestamp: Date.now(),
+
+  provider: 'gemini',
+
+  model: 'gemini-2.5-flash',
+}
+```
+
+After the provider responds, the Runner emits:
+
+```ts
+'provider.response'
 ```
 
 Example:
 
 ```ts
 {
-  type: "text",
+  type: 'provider.response',
 
-  content:
-    "Hello, how can I help?"
+  runId: 'run_123',
+
+  timestamp: Date.now(),
+
+  provider: 'gemini',
+
+  model: 'gemini-2.5-flash',
 }
 ```
+
+These events can be used for:
+
+* Debugging
+* Logging
+* Observability
+* Tracing
+* Runtime monitoring
 
 ---
 
 # Built-in providers
 
-Agni includes provider adapters for popular AI platforms.
+Agni currently provides a Gemini provider implementation.
 
 ## Gemini
 
 ```ts
-import { GeminiProvider } from 'agni-sdk';
+import { GeminiProvider } from 'agni-agent-sdk';
+```
 
+Example:
+
+```ts
 const provider = new GeminiProvider({
   apiKey: process.env.GEMINI_API_KEY!,
 });
 ```
 
----
-
-## OpenAI
+The provider exposes its configured metadata through:
 
 ```ts
-import { OpenAIProvider } from 'agni-sdk';
-
-const provider = new OpenAIProvider({
-  apiKey: process.env.OPENAI_API_KEY!,
-});
-```
-
----
-
-## Anthropic
-
-```ts
-import { AnthropicProvider } from 'agni-sdk';
-
-const provider = new AnthropicProvider({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
-});
+provider.info;
 ```
 
 ---
 
 # Using a provider
 
-Providers are passed into an Agent.
+Providers are passed into an `Agent`.
 
 ```ts
-import { Agent, GeminiProvider } from 'agni-sdk';
+import {
+  Agent,
+  GeminiProvider,
+} from 'agni-agent-sdk';
 
 const provider = new GeminiProvider({
   apiKey: process.env.GEMINI_API_KEY!,
@@ -221,69 +466,38 @@ const provider = new GeminiProvider({
 const agent = new Agent({
   name: 'assistant',
 
-  instructions: 'You are helpful.',
+  instructions: 'You are a helpful assistant.',
 
   provider,
 });
 ```
 
----
-
-# Provider lifecycle
-
-During execution:
-
-```
-Runner
-
-  |
-
-  v
-
-Provider Request
-
-  |
-
-  v
-
-Provider Adapter
-
-  |
-
-  v
-
-Model API
-
-  |
-
-  v
-
-Provider Response
-
-  |
-
-  v
-
-Runner
-```
-
-The runtime never needs to know which model is being used.
+The same Agent/Runner architecture can work with another provider implementing `ModelProvider`.
 
 ---
 
 # Custom providers
 
-You can implement your own provider.
+Agni's provider abstraction allows applications to implement custom providers.
 
 Example:
 
 ```ts
-import type { Provider } from 'agni-sdk';
+import type {
+  ModelProvider,
+  ModelRequest,
+  ModelResponse,
+} from 'agni-agent-sdk';
 
-class CustomProvider implements Provider {
-  name = 'custom-provider';
+class CustomProvider implements ModelProvider {
+  readonly info = {
+    name: 'custom-provider',
+    model: 'custom-model',
+  };
 
-  async generate(request) {
+  async generate(
+    request: ModelRequest,
+  ): Promise<ModelResponse> {
     const response = await myModel.generate(request);
 
     return {
@@ -295,62 +509,229 @@ class CustomProvider implements Provider {
 }
 ```
 
+The custom provider only needs to satisfy Agni's normalized provider contract.
+
 ---
 
-# Provider selection
+# Provider errors
 
-Agents can switch providers without changing application logic.
+Provider failures are normalized by the runtime into Agni provider errors.
+
+The base error is:
+
+```ts
+ProviderError
+```
+
+Import it with:
+
+```ts
+import {
+  ProviderError,
+} from 'agni-agent-sdk';
+```
+
+Provider errors contain information such as:
+
+```ts
+error.code;
+
+error.provider;
+
+error.model;
+
+error.metadata;
+
+error.retryable;
+```
+
+---
+
+# Provider error types
+
+Agni currently defines the following provider errors:
+
+| Error                         | Code                            | Retryable        |
+| ----------------------------- | ------------------------------- | ---------------- |
+| `ProviderError`               | `PROVIDER_ERROR`                | Depends on error |
+| `ProviderAuthenticationError` | `PROVIDER_AUTHENTICATION_ERROR` | No               |
+| `ProviderRateLimitError`      | `PROVIDER_RATE_LIMIT_ERROR`     | Yes              |
+| `ProviderTimeoutError`        | `PROVIDER_TIMEOUT_ERROR`        | Yes              |
+| `ProviderResponseError`       | `PROVIDER_RESPONSE_ERROR`       | No               |
+
+---
+
+## ProviderAuthenticationError
+
+Used when provider authentication fails.
+
+Common causes:
+
+* Invalid API key
+* Expired credentials
+* Invalid authentication configuration
 
 Example:
 
 ```ts
-const agent = new Agent({
-  name: 'assistant',
-
-  provider: geminiProvider,
-});
+if (!result.success) {
+  if (
+    result.error.code ===
+    'PROVIDER_AUTHENTICATION_ERROR'
+  ) {
+    console.error('Check provider credentials.');
+  }
+}
 ```
 
-Change only:
-
-```ts
-provider: openAIProvider;
-```
-
-The rest of the application remains unchanged.
+Authentication errors are not retryable by default.
 
 ---
 
-# Error handling
+## ProviderRateLimitError
+
+Used when the provider rejects a request because of rate limits or quota.
+
+```ts
+ProviderRateLimitError
+```
+
+Error code:
+
+```ts
+'PROVIDER_RATE_LIMIT_ERROR'
+```
+
+This error is marked as retryable.
+
+Applications can use this information to implement retry or backoff strategies.
+
+---
+
+## ProviderTimeoutError
+
+Used when a provider request exceeds the configured or provider-side timeout.
+
+```ts
+ProviderTimeoutError
+```
+
+Error code:
+
+```ts
+'PROVIDER_TIMEOUT_ERROR'
+```
+
+This error is marked as retryable.
+
+---
+
+## ProviderResponseError
+
+Used when the provider returns an invalid or malformed response.
+
+```ts
+ProviderResponseError
+```
+
+Error code:
+
+```ts
+'PROVIDER_RESPONSE_ERROR'
+```
+
+This error is not retryable by default.
+
+---
+
+# Handling provider failures
 
 Provider failures are returned through `RunResult`.
 
-Common provider errors:
+```ts
+const result = await runner.run(
+  agent,
 
-| Error                | Description                  |
-| -------------------- | ---------------------------- |
-| Authentication error | Invalid API key              |
-| Rate limit           | Provider quota exceeded      |
-| Timeout              | Model request exceeded limit |
-| Invalid request      | Unsupported parameters       |
+  'Explain AI agents.',
+
+  {
+    context: {},
+  },
+);
+
+if (!result.success) {
+  console.error({
+    code: result.error.code,
+
+    message: result.error.message,
+
+    retryable: result.error.retryable,
+
+    runId: result.metadata?.runId,
+  });
+}
+```
+
+This allows applications to handle failures without depending on provider-specific error objects.
+
+---
+
+# Retryable errors
+
+Provider errors expose a `retryable` property.
+
+```ts
+result.error.retryable;
+```
 
 Example:
 
 ```ts
-const result = await runner.run(agent, input, {
-  context: {},
-});
-
-if (!result.success) {
-  console.error(result.error);
+if (
+  !result.success &&
+  result.error.retryable
+) {
+  // Retry according to application policy.
 }
 ```
+
+Typical retryable provider failures include:
+
+* Rate limits
+* Timeouts
+
+Authentication and malformed-response errors are not retryable by default.
+
+---
+
+# Provider independence
+
+The main advantage of the provider abstraction is that the runtime does not depend on a specific model provider.
+
+```text
+                  Agent
+                    |
+                    v
+                  Runner
+                    |
+                    v
+             ModelProvider
+                    |
+        +-----------+-----------+
+        |           |           |
+        v           v           v
+      Gemini     OpenAI      Custom
+```
+
+The Agent and Runner can remain unchanged while the provider implementation changes.
 
 ---
 
 # Related
 
-- [`Agent`](/docs/api-reference/agent)
-- [`Runner`](/docs/api-reference/runner)
-- [`Tool`](/docs/api-reference/tool)
-- [`Custom Provider Guide`](/docs/guides/custom-provider)
+* [`Agent`](/docs/api-reference/agent)
+* [`Runner`](/docs/api-reference/runner)
+* [`Tool`](/docs/api-reference/tool)
+* [`RunResult`](/docs/api-reference/run-result)
+* [`Error`](/docs/api-reference/error)
+* [`Custom Provider Guide`](/docs/guides/custom-provider)
