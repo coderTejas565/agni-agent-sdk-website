@@ -63,7 +63,7 @@ export function Architecture() {
 
           <p className="text-muted-foreground mx-auto mt-6 max-w-2xl text-lg leading-relaxed">
             Agni SDK separates agent execution, providers, tools, and memory into modular
-            layers — designed for reliability, observability, and control.
+            layers designed for reliability, observability, and control.
           </p>
         </motion.div>
 
