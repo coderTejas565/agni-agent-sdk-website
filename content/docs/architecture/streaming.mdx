@@ -1,252 +1,752 @@
 ---
 title: Streaming
-description: Understand how Agni exposes runtime events during agent execution.
+description: Learn how Agni streams model output incrementally through provider-agnostic runtime events, while separating live generation from runtime lifecycle events.
 ---
 
 # Streaming
 
-Every agent execution is a sequence of events.
+Agni provides two ways to observe an agent execution:
 
-Instead of treating execution as a black box, Agni exposes what happens internally through a runtime event system.
+- **Runtime events** through the `EventBus`
+- **Model streaming** through `runner.stream()`
 
-This makes it possible to observe, debug, and monitor agents while they are running.
+Runtime events describe what the runtime is doing.
+
+Model streaming exposes generated model output incrementally as it becomes available.
+
+These are related, but they solve different problems.
 
 ---
 
 ## Why streaming exists
 
-Most agent frameworks only return a final response.
+A normal agent execution waits for the provider to return a complete response.
 
-Everything that happens before that remains hidden.
+```ts
+const result = await runner.run(
+  agent,
+  'Explain AI agents.',
+  {
+    context: {},
+  },
+);
+````
 
-Agni takes a different approach.
+The application receives the final result after generation completes.
 
-The runtime publishes events throughout execution so applications can observe exactly what is happening.
+With streaming, the application can consume the response incrementally.
 
-This improves:
+```ts
+const stream = runner.stream(
+  agent,
+  'Explain AI agents.',
+  {
+    context: {},
+  },
+);
 
-- debugging
-- observability
-- logging
-- analytics
-- developer experience
+for await (const event of stream) {
+  if (event.type === 'text_delta') {
+    process.stdout.write(event.text);
+  }
+}
+```
+
+This is useful for:
+
+* Chat interfaces
+* Live response rendering
+* Terminal applications
+* Server-sent events
+* WebSocket applications
+* Responsive AI applications
 
 ---
 
-## Runtime event flow
+## Two runtime observation systems
 
-Every execution follows the same sequence.
+Agni separates runtime lifecycle events from model output streaming.
 
 ```text
-agent.started
-
-      │
-
-      ▼
-
-turn.started
-
-      │
-
-      ▼
-
-provider.request
-
-      │
-
-      ▼
-
-provider.response
-
-      │
-
-      ▼
-
-tool.called
-
-      │
-
-      ▼
-
-tool.completed
-
-      │
-
-      ▼
-
-agent.completed
+                         Agent Execution
+                               |
+                +--------------+--------------+
+                |                             |
+                v                             v
+            EventBus                    Provider.stream()
+                |                             |
+                v                             v
+        Runtime Events               ModelStreamChunk
+                                              |
+                                              v
+                                           Runner
+                                              |
+                                              v
+                                      RunStreamEvent
+                                              |
+                                              v
+                                          Consumer
 ```
 
-Applications can subscribe to any stage of execution.
+The two systems have different responsibilities.
+
+### EventBus
+
+The EventBus exposes runtime lifecycle events such as:
+
+* `agent.started`
+* `turn.started`
+* `provider.request`
+* `provider.response`
+* `tool.called`
+* `tool.completed`
+* `agent.completed`
+
+### `runner.stream()`
+
+`runner.stream()` exposes model output incrementally.
+
+The application consumes the stream using `for await...of`.
 
 ---
 
-## Event Bus
+## Streaming architecture
 
-The Runner owns an Event Bus.
+The provider owns provider-specific streaming behavior.
 
+The Runner does not know how Gemini, OpenAI, Anthropic, or another provider implements streaming.
+
+Instead, providers convert their native streaming responses into Agni's normalized streaming contract.
+
+```text
+Provider SDK
+     |
+     v
+Provider Adapter
+     |
+     v
+ModelStreamChunk
+     |
+     v
+Runner
+     |
+     v
+RunStreamEvent
+     |
+     v
+Application
 ```
-          Runner
 
-             │
-
-             ▼
-
-         Event Bus
-
-     ┌──────┼──────┐
-
-     ▼      ▼      ▼
-
- Logger  UI  Analytics
-```
-
-Every runtime event is published through this single system.
-
-Consumers simply subscribe to the events they care about.
+This keeps the application independent from provider SDKs.
 
 ---
 
-## Current runtime events
+## Provider-level streaming
 
-Agni currently emits the following events.
+Every provider implements the `ModelProvider` interface.
 
-| Event               | Description                        |
-| ------------------- | ---------------------------------- |
-| `agent.started`     | Agent execution begins             |
-| `turn.started`      | A new reasoning turn starts        |
-| `provider.request`  | Request sent to the model provider |
-| `provider.response` | Provider returns a response        |
-| `tool.called`       | The model requested a tool         |
-| `tool.completed`    | Tool execution finished            |
-| `agent.completed`   | Execution finished successfully    |
+```ts
+interface ModelProvider {
+  generate(
+    request: ModelRequest,
+  ): Promise<ModelResponse>;
 
-These events represent the complete lifecycle of a single run.
+  stream(
+    request: ModelRequest,
+  ): AsyncIterable<ModelStreamChunk>;
+}
+```
+
+`generate()` produces a complete model response.
+
+`stream()` produces normalized chunks incrementally.
+
+For example, the Gemini provider uses Gemini's streaming API internally:
+
+```ts
+const responseStream =
+  await this.client.models.generateContentStream({
+    model: this.model,
+
+    ...geminiRequest,
+  });
+```
+
+The Gemini provider then converts Gemini responses into Agni's provider-agnostic stream chunks.
 
 ---
 
-## Listening for events
+## Model stream chunks
 
-Applications subscribe through the Runner.
+Providers produce normalized `ModelStreamChunk` values.
+
+```ts
+type ModelStreamChunk =
+  | TextStreamChunk
+  | ToolCallStreamChunk
+  | StreamDoneChunk;
+```
+
+These types live in Agni's core contracts.
+
+---
+
+## Text stream chunk
+
+A text chunk represents a newly generated piece of model output.
+
+```ts
+interface TextStreamChunk {
+  type: 'text_delta';
+
+  text: string;
+}
+```
+
+For example:
+
+```ts
+{
+  type: 'text_delta',
+  text: 'An AI agent'
+}
+```
+
+A provider may produce multiple text chunks during one response.
+
+```text
+"An AI agent"
+      +
+" perceives"
+      +
+" its environment"
+      +
+" and acts."
+```
+
+The application can consume each chunk immediately.
+
+---
+
+## Tool-call stream chunk
+
+Agni also defines a normalized representation for incremental tool-call information.
+
+```ts
+interface ToolCallStreamChunk {
+  type: 'tool_call_delta';
+
+  id?: string;
+
+  name?: string;
+
+  arguments?: string;
+}
+```
+
+This abstraction allows providers to expose streaming tool-call information without exposing their provider-specific response format.
+
+The normalized contract is already part of Agni's core types.
+
+The current Gemini streaming implementation, however, primarily emits text chunks and the final `done` chunk.
+
+---
+
+## Stream completion
+
+When provider streaming has finished, the provider emits a normalized `done` chunk.
+
+```ts
+interface StreamDoneChunk {
+  type: 'done';
+}
+```
+
+This tells the Runner that provider streaming has completed.
+
+---
+
+## Runtime stream events
+
+The Runner converts provider-level `ModelStreamChunk` values into public Agni `RunStreamEvent` values.
+
+```ts
+type RunStreamEvent =
+  | RunStreamTextEvent
+  | RunStreamToolCallEvent
+  | RunStreamDoneEvent;
+```
+
+The public stream events include the `runId`.
+
+This allows applications to associate streamed output with the corresponding agent execution.
+
+---
+
+## Text stream event
+
+```ts
+interface RunStreamTextEvent {
+  type: 'text_delta';
+
+  runId: string;
+
+  text: string;
+}
+```
+
+Example:
+
+```ts
+{
+  type: 'text_delta',
+  runId: 'df458eda-fdcd-4717-86ae-a24bc83ef86a',
+  text: 'An AI agent'
+}
+```
+
+---
+
+## Tool-call stream event
+
+```ts
+interface RunStreamToolCallEvent {
+  type: 'tool_call_delta';
+
+  runId: string;
+
+  id?: string;
+
+  name?: string;
+
+  arguments?: string;
+}
+```
+
+This represents incremental tool-call information.
+
+The event is provider-agnostic.
+
+---
+
+## Done stream event
+
+```ts
+interface RunStreamDoneEvent {
+  type: 'done';
+
+  runId: string;
+}
+```
+
+The Runner exposes this event when the provider reports that streaming has completed.
+
+---
+
+## Consuming a stream
+
+Applications consume the stream using `for await...of`.
+
+```ts
+const stream = runner.stream(
+  agent,
+  'Explain what an AI agent is.',
+  {
+    context: {},
+  },
+);
+
+for await (const event of stream) {
+  if (event.type === 'text_delta') {
+    process.stdout.write(event.text);
+  }
+}
+```
+
+The application does not need to know anything about Gemini's streaming response objects.
+
+It only handles Agni's `RunStreamEvent` values.
+
+---
+
+## Complete example
+
+```ts
+import {
+  Agent,
+  GeminiProvider,
+  Runner,
+} from 'agni-agent-sdk';
+
+const provider = new GeminiProvider({
+  apiKey: process.env.GEMINI_API_KEY,
+});
+
+const agent = new Agent({
+  name: 'stream-test',
+
+  instructions:
+    'You are a helpful assistant. Keep responses concise.',
+
+  provider,
+});
+
+const runner = new Runner();
+
+const stream = runner.stream(
+  agent,
+
+  'Explain what an AI agent is.',
+
+  {
+    context: {},
+  },
+);
+
+for await (const event of stream) {
+  if (event.type === 'text_delta') {
+    process.stdout.write(event.text);
+  }
+}
+```
+
+The application receives text incrementally instead of waiting for the complete model response.
+
+---
+
+## Streaming lifecycle
+
+The current streaming execution follows this flow:
+
+```text
+Agent
+  |
+  v
+RunContext
+  |
+  v
+Provider.stream()
+  |
+  v
+ModelStreamChunk
+  |
+  v
+Runner
+  |
+  v
+RunStreamEvent
+  |
+  v
+Consumer
+```
+
+The Runner also publishes normal runtime lifecycle events through the EventBus.
+
+Therefore, a streaming execution can be observed through both systems:
+
+```text
+                    Runner
+                       |
+          +------------+------------+
+          |                         |
+          v                         v
+      EventBus                runner.stream()
+          |                         |
+          v                         v
+ Runtime lifecycle             Model output
+      events                     events
+```
+
+---
+
+## EventBus vs streaming
+
+The EventBus and model streaming should not be confused.
+
+| EventBus              | `runner.stream()`       |
+| --------------------- | ----------------------- |
+| Runtime lifecycle     | Model output            |
+| Observability         | Incremental generation  |
+| Tool execution events | Text deltas             |
+| Provider lifecycle    | Stream completion       |
+| Logging               | Chat UI                 |
+| Metrics               | Live response rendering |
+
+For example, an application can listen for tool execution events:
 
 ```ts
 runner.events.on('tool.called', (event) => {
-  console.log(event.toolName);
+  console.log('Tool:', event.toolName);
 });
 ```
 
-The runtime automatically publishes events.
+While simultaneously consuming model output:
 
-Applications simply react to them.
-
----
-
-## Multiple subscribers
-
-One event can have multiple listeners.
-
-```
-Event
-
-   │
-
-   ├────► Logger
-
-   ├────► Metrics
-
-   ├────► Dashboard
-
-   └────► Debug Console
+```ts
+for await (const event of runner.stream(
+  agent,
+  input,
+  { context: {} },
+)) {
+  if (event.type === 'text_delta') {
+    process.stdout.write(event.text);
+  }
+}
 ```
 
-This keeps runtime execution independent from application concerns.
+The EventBus tells you what the runtime is doing.
+
+The stream tells you what the model is generating.
 
 ---
 
-## Why use an Event Bus?
+## Provider independence
 
-Without an Event Bus, the Runner would need to know about:
+The application never consumes provider-specific streaming objects.
 
-- logging
-- tracing
-- analytics
-- monitoring
-- developer tools
+For example, Gemini internally produces:
 
-Instead, the Runner only emits events.
+```text
+Gemini SDK
+    |
+    v
+GeminiProvider
+    |
+    v
+ModelStreamChunk
+    |
+    v
+Runner
+    |
+    v
+RunStreamEvent
+```
 
-Everything else is built on top of those events.
+Another provider can implement the same contract:
+
+```text
+Provider SDK
+    |
+    v
+Provider Adapter
+    |
+    v
+ModelStreamChunk
+    |
+    v
+Runner
+    |
+    v
+RunStreamEvent
+```
+
+The Runner and application do not need to change.
+
+This is the main benefit of Agni's provider abstraction.
 
 ---
 
-## Streaming vs tracing
+## Error handling
 
-Although related, streaming and tracing solve different problems.
+Streaming provider failures are surfaced through the async generator.
 
-| Streaming             | Tracing                    |
-| --------------------- | -------------------------- |
-| Live runtime events   | Complete execution history |
-| Real-time observation | Historical analysis        |
-| Event-driven          | Span-driven                |
-| Immediate feedback    | Performance insights       |
+Applications can handle them with `try/catch`.
 
-Streaming tells you **what is happening now**.
+```ts
+try {
+  for await (const event of runner.stream(
+    agent,
+    input,
+    { context: {} },
+  )) {
+    if (event.type === 'text_delta') {
+      process.stdout.write(event.text);
+    }
+  }
+} catch (error) {
+  console.error(error);
+}
+```
 
-Tracing explains **what happened during the entire execution**.
+Provider-specific failures are normalized into `ProviderError` before being surfaced by the Runner.
+
+The current streaming implementation does not return a `RunResult` when a provider failure occurs during streaming.
 
 ---
 
-## Future capabilities
+## Current implementation
 
-The event system is designed to support additional runtime events as Agni evolves.
+The current Agni streaming implementation supports:
 
-Examples include:
+* Provider-agnostic streaming contracts
+* Gemini streaming
+* Incremental text events
+* Stream completion events
+* Run IDs on public stream events
+* Provider error normalization
+* `AsyncIterable` consumption
 
-- token streaming
-- guardrail execution
-- memory retrieval
-- handoffs
-- retries
-- structured output validation
+The normalized contracts also define tool-call streaming events.
 
-These features can be added without changing how applications subscribe to events.
+However, the current Gemini streaming implementation primarily emits:
+
+```text
+text_delta
+    |
+    | ... more text
+    |
+done
+```
+
+Full streamed tool execution is not yet part of the current Runner streaming loop.
+
+---
+
+## Streaming vs `run()`
+
+Use `run()` when the application needs the final normalized result.
+
+```ts
+const result = await runner.run(
+  agent,
+  input,
+  {
+    context: {},
+  },
+);
+```
+
+Use `stream()` when the application needs incremental model output.
+
+```ts
+const stream = runner.stream(
+  agent,
+  input,
+  {
+    context: {},
+  },
+);
+```
+
+The distinction is:
+
+```text
+run()
+  |
+  v
+Provider.generate()
+  |
+  v
+ModelResponse
+  |
+  v
+Tool loop
+  |
+  v
+RunResult
+```
+
+while:
+
+```text
+stream()
+  |
+  v
+Provider.stream()
+  |
+  v
+ModelStreamChunk
+  |
+  v
+RunStreamEvent
+  |
+  v
+Consumer
+```
 
 ---
 
 ## Design principles
 
-Agni's streaming system is built around four principles.
+### Provider agnostic
 
-### Observable
-
-Important runtime actions should never be hidden.
+Applications consume Agni's normalized stream events rather than provider SDK objects.
 
 ---
 
-### Lightweight
+### Incremental
 
-Publishing events should introduce minimal overhead.
+Model output becomes available as soon as the provider produces it.
 
 ---
 
 ### Decoupled
 
-The runtime emits events.
+Providers handle provider-specific streaming.
 
-Applications decide what to do with them.
+The Runner handles normalization.
+
+Applications handle presentation.
+
+---
+
+### Correlatable
+
+Every public stream event contains a `runId`.
+
+This allows streamed output to be associated with the corresponding runtime execution.
 
 ---
 
 ### Extensible
 
-New runtime features should introduce new events without breaking existing integrations.
+The normalized streaming contracts allow additional providers and streaming capabilities to be added without changing the application-facing API.
 
 ---
 
 ## Next steps
 
-Continue exploring the architecture:
+Continue exploring:
 
-- **Tracing** — Learn how Agni records complete execution history.
-- **Concepts** — Understand the core building blocks behind the runtime.
-- **Guides** — Build real-world agent applications using Agni.
+* **Runner** — Learn how Agni orchestrates agent execution.
+* **Provider** — Learn how providers implement the model abstraction.
+* **Events** — Learn about runtime lifecycle events.
+* **Tracing** — Learn how complete executions can be analyzed historically.
+
+````
+
+### One important change from your old doc
+
+I deliberately **removed this claim**:
+
+```text
+agent.started
+↓
+turn.started
+↓
+provider.request
+↓
+provider.response
+↓
+tool.called
+↓
+tool.completed
+↓
+agent.completed
+````
+
+as the definition of "streaming."
+
+That's your **EventBus lifecycle**, not `runner.stream()`.
+
+Your implementation now has a much cleaner separation:
+
+```text
+EventBus
+   → runtime lifecycle / observability
+
+runner.stream()
+   → incremental model output
+```
+
+That's the architecture I would document for **Agni v1.1.0**.
